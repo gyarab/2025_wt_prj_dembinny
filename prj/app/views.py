@@ -6,7 +6,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .models import BankAccount, Expense, PaymentRequest, Transaction
+from .models import BankAccount, Expense, PaymentRequest, Transaction, User
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -319,3 +319,134 @@ def password_change_view(req):
 def password_change_done_view(req):
     """Simple confirmation page shown after a successful password change."""
     return render(req, 'password_change_done.html')
+
+
+# ── Treasurer Dashboard ───────────────────────────────────────────────────────
+
+def _treasurer_required(view_fn):
+    """Decorator: redirect non-treasurers to their own dashboard."""
+    from functools import wraps
+    @wraps(view_fn)
+    def wrapper(req, *args, **kwargs):
+        if not req.user.is_authenticated:
+            return redirect('login')
+        if not req.user.is_treasurer:
+            messages.error(req, 'Access denied – treasurer only.')
+            return redirect('dashboard')
+        return view_fn(req, *args, **kwargs)
+    return wrapper
+
+
+@_treasurer_required
+def treasurer_dashboard_view(req):
+    """
+    Treasurer-only overview:
+    - Fund totals (collected, spent, balance)
+    - All active payment requests with per-request progress
+    - All students with per-student paid/missing/pending summary
+    - Recent unconfirmed transactions waiting for review
+    """
+    today = timezone.now().date()
+
+    # ── Payment requests ──────────────────────────────────────────────────────
+    all_requests = PaymentRequest.objects.prefetch_related(
+        'transactions', 'assigned_to'
+    ).order_by('-created_at')
+
+    # Annotate each request with progress stats
+    students = User.objects.filter(is_active=True, is_treasurer=False).order_by('last_name', 'first_name', 'username')
+    student_count = students.count()
+
+    for pr in all_requests:
+        pr.confirmed_count = pr.transactions.filter(status=Transaction.Status.CONFIRMED).count()
+        pr.pending_count   = pr.transactions.filter(status=Transaction.Status.PENDING).count()
+        pr.expected_count  = student_count if pr.assign_to_all else pr.assigned_to.count()
+        pr.missing_count   = max(0, pr.expected_count - pr.confirmed_count - pr.pending_count)
+        pr.collected       = pr.transactions.filter(
+            status=Transaction.Status.CONFIRMED
+        ).aggregate(s=Sum('amount'))['s'] or 0
+        pr.expected_total  = pr.amount * pr.expected_count
+        pr.is_overdue      = bool(pr.due_date and pr.due_date < today)
+
+    # ── Per-student summary ───────────────────────────────────────────────────
+    confirmed_txs = Transaction.objects.filter(
+        status=Transaction.Status.CONFIRMED
+    ).select_related('student', 'payment_request')
+
+    pending_txs = Transaction.objects.filter(
+        status=Transaction.Status.PENDING
+    ).select_related('student', 'payment_request')
+
+    # Build lookup: student_id → set of confirmed/pending request ids
+    confirmed_map: dict[int, set] = {}
+    pending_map:   dict[int, set] = {}
+    paid_amount_map: dict[int, int] = {}
+
+    for tx in confirmed_txs:
+        confirmed_map.setdefault(tx.student_id, set()).add(tx.payment_request_id)
+        paid_amount_map[tx.student_id] = paid_amount_map.get(tx.student_id, 0) + int(tx.amount)
+
+    for tx in pending_txs:
+        pending_map.setdefault(tx.student_id, set()).add(tx.payment_request_id)
+
+    # All request ids
+    all_request_ids = set(pr.id for pr in all_requests)
+
+    student_rows = []
+    for student in students:
+        s_confirmed = confirmed_map.get(student.id, set())
+        s_pending   = pending_map.get(student.id, set())
+
+        # Requests assigned to this student
+        assigned_ids = set(
+            PaymentRequest.objects.filter(
+                Q(assign_to_all=True) | Q(assigned_to=student)
+            ).values_list('id', flat=True)
+        )
+
+        missing_ids  = assigned_ids - s_confirmed - s_pending
+        paid_total   = paid_amount_map.get(student.id, 0)
+
+        owed_total = (
+            PaymentRequest.objects.filter(id__in=missing_ids | s_pending)
+            .aggregate(s=Sum('amount'))['s'] or 0
+        )
+
+        student_rows.append({
+            'student':       student,
+            'paid_count':    len(s_confirmed),
+            'pending_count': len(s_pending),
+            'missing_count': len(missing_ids),
+            'paid_total':    paid_total,
+            'owed_total':    owed_total,
+        })
+
+    # ── Fund totals ───────────────────────────────────────────────────────────
+    total_collected = Transaction.objects.filter(
+        status=Transaction.Status.CONFIRMED
+    ).aggregate(s=Sum('amount'))['s'] or 0
+
+    total_spent = Expense.objects.aggregate(s=Sum('amount'))['s'] or 0
+    balance     = total_collected - total_spent
+
+    # ── Pending transactions (awaiting treasurer action) ──────────────────────
+    pending_transactions = (
+        Transaction.objects
+        .filter(status=Transaction.Status.PENDING)
+        .select_related('student', 'payment_request')
+        .order_by('created_at')
+    )
+
+    # ── Recent expenses ───────────────────────────────────────────────────────
+    recent_expenses = Expense.objects.order_by('-spent_at')[:8]
+
+    return render(req, 'treasurer_dashboard.html', {
+        'all_requests':         all_requests,
+        'student_rows':         student_rows,
+        'pending_transactions': pending_transactions,
+        'recent_expenses':      recent_expenses,
+        'total_collected':      total_collected,
+        'total_spent':          total_spent,
+        'balance':              balance,
+        'today':                today,
+    })
