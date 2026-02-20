@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Class Fund Manager{% endblock %}
+
+{% block content %}
+<style>
+    /* ── Greeting ── */
+    .greeting {
+        margin-bottom: 1.75rem;
+    }
+
+    .greeting h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+
+    .greeting p {
+        color: #555;
+        margin-top: .25rem;
+        font-size: .95rem;
+    }
+
+    /* ── Summary cards ── */
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
+        border-left: 4px solid #1a1a2e;
+    }
+
+    .stat-card.danger {
+        border-color: #dc3545;
+    }
+
+    .stat-card.success {
+        border-color: #28a745;
+    }
+
+    .stat-card.warning {
+        border-color: #ffc107;
+    }
+
+    .stat-card .label {
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #888;
+    }
+
+    .stat-card .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-top: .2rem;
+        color: #1a1a2e;
+    }
+
+    /* ── Section headings ── */
+    .section {
+        margin-bottom: 2.25rem;
+    }
+
+    .section h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-bottom: 2px solid #e8e8e8;
+        padding-bottom: .4rem;
+        margin-bottom: 1rem;
+    }
+
+    /* ── Tables ── */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .9rem;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: .55rem .75rem;
+        background: #1a1a2e;
+        color: #e2b96f;
+        font-weight: 600;
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .data-table td {
+        padding: .55rem .75rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+        background: #f9f9f9;
+    }
+
+    /* ── Badges ── */
+    .badge {
+        display: inline-block;
+        padding: .2rem .55rem;
+        border-radius: 12px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .badge-danger {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-success {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge-secondary {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    /* ── Empty states ── */
+    .empty {
+        color: #888;
+        font-style: italic;
+        padding: .75rem 0;
+        font-size: .9rem;
+    }
+
+    /* ── Overdue highlight ── */
+    .overdue {
+        color: #dc3545;
+        font-weight: 600;
+    }
+</style>
+
+<!-- Greeting -->
+<div class="greeting">
+    <h1>Hello, {{ user.get_full_name|default:user.username }}! 👋</h1>
+    <p>Here's your Class Fund overview for today, {{ today|date:"F j, Y" }}.</p>
+</div>
+
+<!-- Summary cards -->
+<div class="stats">
+    <div class="stat-card danger">
+        <div class="label">Still Owed</div>
+        <div class="value">{{ total_owed }} CZK</div>
+    </div>
+    <div class="stat-card success">
+        <div class="label">Total Paid</div>
+        <div class="value">{{ total_paid }} CZK</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="label">Pending Requests</div>
+        <div class="value">{{ unpaid_requests.count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Awaiting Confirmation</div>
+        <div class="value">{{ awaiting_requests.count }}</div>
+    </div>
+</div>
+
+<!-- Unpaid payment requests -->
+<div class="section">
+    <h2>📋 Payments Due</h2>
+    {% if unpaid_requests %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in unpaid_requests %}
+            <tr>
+                <td>{{ req.title }}</td>
+                <td><strong>{{ req.amount }} CZK</strong></td>
+                <td>
+                    {% if req.due_date %}
+                    {% if req.due_date < today %} <span class="overdue">{{ req.due_date|date:"d.m.Y" }} ⚠ Overdue</span>
+                        {% else %}
+                        {{ req.due_date|date:"d.m.Y" }}
+                        {% endif %}
+                        {% else %}
+                        <span style="color:#aaa;">—</span>
+                        {% endif %}
+                </td>
+                <td><span class="badge badge-danger">Unpaid</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">✅ You have no outstanding payments. Great job!</p>
+    {% endif %}
+</div>
+
+<!-- Awaiting treasurer confirmation -->
+{% if awaiting_requests %}
+<div class="section">
+    <h2>⏳ Awaiting Confirmation</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in awaiting_requests %}
+            <tr>
+                <td>{{ req.title }}</td>
+                <td>{{ req.amount }} CZK</td>
+                <td>{{ req.due_date|date:"d.m.Y"|default:"—" }}</td>
+                <td><span class="badge badge-warning">Pending</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Payment history -->
+<div class="section">
+    <h2>🧾 My Payment History</h2>
+    {% if my_transactions %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Request</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in my_transactions %}
+            <tr>
+                <td>{{ tx.payment_request.title }}</td>
+                <td>{{ tx.amount }} CZK</td>
+                <td>
+                    {% if tx.status == 'confirmed' %}
+                    <span class="badge badge-success">Confirmed</span>
+                    {% elif tx.status == 'pending' %}
+                    <span class="badge badge-warning">Pending</span>
+                    {% else %}
+                    <span class="badge badge-secondary">Rejected</span>
+                    {% endif %}
+                </td>
+                <td>{{ tx.created_at|date:"d.m.Y" }}</td>
+                <td>{{ tx.note|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No payment history yet.</p>
+    {% endif %}
+</div>
+
+<!-- Recent expenses from the fund -->
+<div class="section">
+    <h2>💸 Recent Fund Expenses</h2>
+    {% if recent_expenses %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Category</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exp in recent_expenses %}
+            <tr>
+                <td>{{ exp.title }}</td>
+                <td>{{ exp.amount }} CZK</td>
+                <td><span class="badge badge-secondary">{{ exp.get_category_display }}</span></td>
+                <td>{{ exp.spent_at|date:"d.m.Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No expenses recorded yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

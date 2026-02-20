@@ -122,5 +122,5 @@ AUTH_USER_MODEL = 'app.User'
 
 # Authentication redirects
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'homepage'
+LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
