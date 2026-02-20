@@ -115,7 +115,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+# Serve static files at /static/ during development and by your webserver in production.
+STATIC_URL = '/static/'
+
+# Additional locations the staticfiles app will search for static files.
+# The app-level `app/static/` directory is discovered automatically, but adding
+# an explicit entry avoids ambiguity when resolving asset paths in templates.
+from pathlib import Path as _Path
+STATICFILES_DIRS = [
+    BASE_DIR / 'app' / 'static',
+]
 
 # Custom user model – must be set before the first migration
 AUTH_USER_MODEL = 'app.User'

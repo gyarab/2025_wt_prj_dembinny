@@ -6,7 +6,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .models import Expense, PaymentRequest, Transaction
+from .models import BankAccount, Expense, PaymentRequest, Transaction
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -135,7 +135,134 @@ def pending_payments_view(req):
     return render(req, 'pending_payments.html', context)
 
 
-# ── Authentication ────────────────────────────────────────────────────────────
+# ── Payment Info & QR Code ────────────────────────────────────────────────────
+
+def _generate_spd_qr(
+    account_id: str,
+    amount=None,
+    message: str = "",
+    variable_symbol: str = "",
+    specific_symbol: str = "",
+    box_size: int = 7,
+) -> str:
+    """
+    Build a Czech SPD Payment QR code and return it as a base64-encoded PNG string
+    for use in <img src="data:image/png;base64,..."> tags.
+
+    SPD fields used:
+      ACC  – IBAN or local account number
+      AM   – amount in CZK (omitted if None)
+      CC   – currency (always CZK)
+      MSG  – payment message / description
+      X-VS – Variable Symbol (up to 10 digits)
+      X-SS – Specific Symbol (up to 10 digits)
+    """
+    import base64
+    import io
+    import qrcode
+
+    parts = ["SPD*1.0", f"ACC:{account_id}", "CC:CZK"]
+    if amount is not None:
+        parts.append(f"AM:{amount}")
+    if message:
+        parts.append(f"MSG:{message[:60]}")   # SPD MSG cap
+    if variable_symbol:
+        parts.append(f"X-VS:{variable_symbol}")
+    if specific_symbol:
+        parts.append(f"X-SS:{specific_symbol}")
+
+    spd_string = "*".join(parts)
+
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=box_size,
+        border=4,
+    )
+    qr.add_data(spd_string)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="#1a1a2e", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+
+def _attach_qr_to_requests(requests, account):
+    """
+    Iterate a queryset/list of PaymentRequest objects and attach a `.qr_base64`
+    attribute to each one so templates can render it inline.
+    Silently skips QR generation if no account is configured.
+    """
+    if not account:
+        for req in requests:
+            req.qr_base64 = None
+        return requests
+
+    account_id = account.iban.strip() if account.iban.strip() else account.account_number.strip()
+
+    for req in requests:
+        try:
+            req.qr_base64 = _generate_spd_qr(
+                account_id=account_id,
+                amount=req.amount,
+                message=req.title,
+                variable_symbol=req.variable_symbol,
+                specific_symbol=req.specific_symbol,
+            )
+        except Exception:
+            req.qr_base64 = None
+
+    return requests
+
+
+@login_required
+def pending_payments_view(req):
+    """
+    Dedicated page listing every payment request the student still owes,
+    sorted with overdue items first, then by due date.
+    Each request carries a pre-generated QR code with its exact amount, VS and SS.
+    """
+    data    = _get_student_payment_data(req.user)
+    account = BankAccount.objects.filter(is_active=True).order_by('-updated_at').first()
+
+    # Force evaluation so we can attach attributes to the objects
+    unpaid_list   = list(data['unpaid_requests'])
+    awaiting_list = list(data['awaiting_requests'])
+
+    _attach_qr_to_requests(unpaid_list,   account)
+    _attach_qr_to_requests(awaiting_list, account)
+
+    context = {
+        'unpaid_requests':   unpaid_list,
+        'awaiting_requests': awaiting_list,
+        'total_owed':        data['total_owed'],
+        'today':             data['today'],
+        'account':           account,
+    }
+    return render(req, 'pending_payments.html', context)
+
+
+@login_required
+def payment_info_view(req):
+    """
+    Shows the class bank account details and a generic scannable QR code
+    (no amount pre-filled — students use this to find the account details).
+    """
+    account = BankAccount.objects.filter(is_active=True).order_by('-updated_at').first()
+    qr_base64 = None
+    if account and account.account_number:
+        account_id = account.iban.strip() if account.iban.strip() else account.account_number.strip()
+        qr_base64 = _generate_spd_qr(
+            account_id=account_id,
+            message=f"Class Fund - {account.owner_name}",
+        )
+
+    return render(req, 'payment_info.html', {
+        'account':   account,
+        'qr_base64': qr_base64,
+    })
+
 
 def login_view(req):
     """Show the login form (GET) or authenticate and redirect (POST)."""

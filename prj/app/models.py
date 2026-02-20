@@ -28,6 +28,26 @@ class User(AbstractUser):
 
 # ── Finance models ─────────────────────────────────────────────────────────────
 
+class BankAccount(models.Model):
+    """
+    Holds the class bank account details shown to students on the payment-info page.
+    Only one row should be active at a time (the treasurer manages this via admin).
+    """
+    owner_name   = models.CharField(max_length=200, help_text="Account holder name (e.g. 'Class 4.B Fund').")
+    account_number = models.CharField(max_length=50,  help_text="Local account number (e.g. '123456789/0800').")
+    iban         = models.CharField(max_length=34, blank=True, help_text="IBAN (optional, used in the QR code).")
+    bank_name    = models.CharField(max_length=100, blank=True, help_text="Bank name (e.g. 'Česká spořitelna').")
+    note         = models.TextField(blank=True, help_text="Any extra instructions for students (e.g. 'always include your name as the message').")
+    is_active    = models.BooleanField(default=True, help_text="Only the active account is shown to students.")
+    updated_at   = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Bank Account"
+        verbose_name_plural = "Bank Accounts"
+
+    def __str__(self):
+        return f"{self.owner_name} — {self.account_number}"
+
 class PaymentRequest(models.Model):
     """
     A request created by the treasurer asking students to pay a specific amount.
@@ -62,6 +82,20 @@ class PaymentRequest(models.Model):
         help_text="Treasurer who created this request.",
     )
     created_at = models.DateTimeField(default=timezone.now)
+
+    # Czech bank payment identifiers
+    variable_symbol = models.CharField(
+        max_length=10,
+        blank=True,
+        verbose_name="Variable Symbol (VS)",
+        help_text="Up to 10 digits. Used to identify the payment purpose at the bank.",
+    )
+    specific_symbol = models.CharField(
+        max_length=10,
+        blank=True,
+        verbose_name="Specific Symbol (SS)",
+        help_text="Up to 10 digits. Optionally used to identify the payer.",
+    )
 
     # Who needs to pay?
     assign_to_all = models.BooleanField(

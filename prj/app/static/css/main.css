@@ -1,0 +1,806 @@
+/* ═══════════════════════════════════════════════════════════
+   Class Fund Manager – main stylesheet
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    background: #f5f7fa;
+    color: #1a1a2e;
+    min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Navigation
+   ═══════════════════════════════════════════════════════════ */
+nav {
+    background: #1a1a2e;
+    padding: .75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+nav .brand {
+    color: #e2b96f;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-decoration: none;
+    margin-right: auto;
+}
+
+nav a {
+    color: #c9d1e0;
+    text-decoration: none;
+    font-size: .9rem;
+}
+
+nav a:hover {
+    color: #e2b96f;
+}
+
+nav .btn-logout {
+    background: none;
+    border: 1px solid #c9d1e0;
+    border-radius: 4px;
+    color: #c9d1e0;
+    cursor: pointer;
+    font-size: .9rem;
+    padding: .25rem .75rem;
+}
+
+nav .btn-logout:hover {
+    border-color: #e2b96f;
+    color: #e2b96f;
+}
+
+nav .username {
+    color: #e2b96f;
+    font-size: .85rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Flash messages
+   ═══════════════════════════════════════════════════════════ */
+.messages {
+    list-style: none;
+    padding: .75rem 1.5rem;
+}
+
+.messages li {
+    border-radius: 4px;
+    margin-bottom: .5rem;
+    padding: .6rem 1rem;
+    font-size: .9rem;
+}
+
+.messages .success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.messages .error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.messages .info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.messages .warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Main content wrapper
+   ═══════════════════════════════════════════════════════════ */
+main {
+    max-width: 860px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Page header (shared: pending_payments, payment_info)
+   ═══════════════════════════════════════════════════════════ */
+.page-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.page-header a {
+    font-size: .9rem;
+    color: #555;
+    text-decoration: none;
+}
+
+.page-header a:hover {
+    color: #1a1a2e;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Badges
+   ═══════════════════════════════════════════════════════════ */
+.badge {
+    display: inline-block;
+    padding: .2rem .55rem;
+    border-radius: 12px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.badge-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-secondary {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.badge-overdue {
+    background: #b02030;
+    color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Shared utility
+   ═══════════════════════════════════════════════════════════ */
+.empty {
+    color: #888;
+    font-style: italic;
+    padding: .75rem 0;
+    font-size: .9rem;
+}
+
+.overdue {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.overdue-text {
+    color: #b02030;
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Section headings
+   ═══════════════════════════════════════════════════════════ */
+.section {
+    margin-bottom: 2.25rem;
+}
+
+.section h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-bottom: 2px solid #e8e8e8;
+    padding-bottom: .4rem;
+    margin-bottom: 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Copy button (shared)
+   ═══════════════════════════════════════════════════════════ */
+.copy-btn {
+    font-size: .75rem;
+    color: #888;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: .15rem .5rem;
+    cursor: pointer;
+    margin-top: .3rem;
+    transition: border-color .15s, color .15s;
+    align-self: flex-start;
+}
+
+.copy-btn:hover {
+    border-color: #1a1a2e;
+    color: #1a1a2e;
+}
+
+.copy-btn.copied {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Dashboard – Greeting
+   ═══════════════════════════════════════════════════════════ */
+.greeting {
+    margin-bottom: 1.75rem;
+}
+
+.greeting h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.greeting p {
+    color: #555;
+    margin-top: .25rem;
+    font-size: .95rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Dashboard – Summary stat cards
+   ═══════════════════════════════════════════════════════════ */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
+    border-left: 4px solid #1a1a2e;
+}
+
+.stat-card.danger {
+    border-color: #dc3545;
+}
+
+.stat-card.success {
+    border-color: #28a745;
+}
+
+.stat-card.warning {
+    border-color: #ffc107;
+}
+
+.stat-card .label {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #888;
+}
+
+.stat-card .value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-top: .2rem;
+    color: #1a1a2e;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Dashboard – Data tables
+   ═══════════════════════════════════════════════════════════ */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+
+.data-table th {
+    text-align: left;
+    padding: .55rem .75rem;
+    background: #1a1a2e;
+    color: #e2b96f;
+    font-weight: 600;
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.data-table td {
+    padding: .55rem .75rem;
+    border-bottom: 1px solid #eee;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background: #f9f9f9;
+}
+
+/* Clickable table rows */
+.data-table tbody tr.clickable-row {
+    cursor: pointer;
+    transition: background .12s;
+}
+
+.data-table tbody tr.clickable-row:hover td {
+    background: #eef1f7;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Home page
+   ═══════════════════════════════════════════════════════════ */
+.hero {
+    text-align: center;
+    padding: 4rem 1rem 3rem;
+}
+
+.hero h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #1a1a2e;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    color: #555;
+    margin: 1rem auto;
+    max-width: 540px;
+}
+
+.hero .btn-login {
+    display: inline-block;
+    margin-top: 1.5rem;
+    background: #1a1a2e;
+    color: #e2b96f;
+    padding: .75rem 2rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: background .2s;
+}
+
+.hero .btn-login:hover {
+    background: #2d2d4e;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+}
+
+.feature-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
+    text-align: center;
+}
+
+.feature-card .icon {
+    font-size: 2rem;
+    margin-bottom: .5rem;
+}
+
+.feature-card h3 {
+    font-size: 1rem;
+    margin-bottom: .4rem;
+}
+
+.feature-card p {
+    font-size: .85rem;
+    color: #666;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Login / auth card
+   ═══════════════════════════════════════════════════════════ */
+.auth-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    max-width: 420px;
+    margin: 3rem auto;
+    padding: 2rem 2.5rem;
+}
+
+.auth-card h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #1a1a2e;
+}
+
+.form-group {
+    margin-bottom: 1.1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    margin-bottom: .35rem;
+    color: #444;
+}
+
+.form-group input {
+    width: 100%;
+    padding: .55rem .75rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: .95rem;
+    transition: border-color .2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #1a1a2e;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: .65rem;
+    background: #1a1a2e;
+    color: #e2b96f;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: .5rem;
+    transition: background .2s;
+}
+
+.btn-primary:hover {
+    background: #2d2d4e;
+}
+
+/* ── Password change extras ── */
+.form-control-input {
+    width: 100%;
+    padding: .55rem .75rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: .95rem;
+    transition: border-color .2s;
+}
+
+.form-control-input:focus {
+    outline: none;
+    border-color: #1a1a2e;
+}
+
+.field-errors {
+    list-style: none;
+    margin-top: .3rem;
+}
+
+.field-errors li {
+    font-size: .8rem;
+    color: #721c24;
+}
+
+.help-text {
+    font-size: .78rem;
+    color: #888;
+    margin-top: .25rem;
+}
+
+.btn-back {
+    display: inline-block;
+    padding: .6rem 1.5rem;
+    background: #1a1a2e;
+    color: #e2b96f;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background .2s;
+}
+
+.btn-back:hover {
+    background: #2d2d4e;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Pending Payments – summary bar
+   ═══════════════════════════════════════════════════════════ */
+.summary-bar {
+    background: #fff;
+    border-left: 5px solid #dc3545;
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .06);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.summary-bar .amount {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #dc3545;
+}
+
+.summary-bar .label {
+    font-size: .85rem;
+    color: #666;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Pending Payments – payment cards
+   ═══════════════════════════════════════════════════════════ */
+.payment-list {
+    display: flex;
+    flex-direction: column;
+    gap: .85rem;
+}
+
+.payment-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
+    padding: 1rem 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: .25rem 1.5rem;
+    align-items: start;
+    border-left: 4px solid #dc3545;
+    transition: box-shadow .15s;
+}
+
+.payment-card:hover {
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .1);
+}
+
+.payment-card.overdue-card {
+    border-color: #b02030;
+    background: #fff8f8;
+}
+
+.payment-card.awaiting-card {
+    border-color: #ffc107;
+}
+
+.payment-card .card-title {
+    font-weight: 700;
+    font-size: 1rem;
+    grid-column: 1;
+}
+
+.payment-card .card-desc {
+    font-size: .85rem;
+    color: #666;
+    grid-column: 1;
+    margin-top: .15rem;
+}
+
+.payment-card .card-meta {
+    font-size: .8rem;
+    color: #888;
+    grid-column: 1;
+    margin-top: .4rem;
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.payment-card .card-amount {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    grid-row: 1 / 3;
+    grid-column: 2;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.payment-card .card-amount small {
+    font-size: .6em;
+    font-weight: 400;
+    color: #888;
+}
+
+/* ── QR toggle ── */
+.qr-toggle {
+    grid-column: 1 / -1;
+    margin-top: .6rem;
+}
+
+.qr-toggle summary {
+    cursor: pointer;
+    font-size: .82rem;
+    color: #1a1a2e;
+    font-weight: 600;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.qr-toggle summary:hover {
+    color: #e2b96f;
+}
+
+.qr-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+    padding: .85rem 1rem;
+    background: #f9f9fc;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.qr-panel img {
+    width: 140px;
+    height: 140px;
+    border-radius: 4px;
+}
+
+.qr-panel .qr-details {
+    font-size: .85rem;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+}
+
+.qr-panel .qr-row label {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #999;
+    display: block;
+    margin-bottom: .1rem;
+}
+
+.qr-panel .qr-value {
+    font-weight: 700;
+    color: #1a1a2e;
+    font-size: .95rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Payment Info page
+   ═══════════════════════════════════════════════════════════ */
+.payment-layout {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 600px) {
+    .payment-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.account-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    padding: 1.75rem 2rem;
+    border-top: 5px solid #1a1a2e;
+}
+
+.account-card h2 {
+    font-size: 1.15rem;
+    margin-bottom: 1.25rem;
+    color: #1a1a2e;
+}
+
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.1rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-row:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.detail-row .field-label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #999;
+    margin-bottom: .25rem;
+}
+
+.detail-row .field-value {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    word-break: break-all;
+}
+
+.note-box {
+    margin-top: 1.25rem;
+    background: #fffbeb;
+    border-left: 4px solid #ffc107;
+    border-radius: 5px;
+    padding: .85rem 1rem;
+    font-size: .9rem;
+    color: #555;
+}
+
+.qr-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    min-width: 200px;
+}
+
+.qr-card h3 {
+    font-size: .9rem;
+    color: #1a1a2e;
+    text-align: center;
+}
+
+.qr-card img {
+    width: 200px;
+    height: 200px;
+    display: block;
+}
+
+.qr-card p {
+    font-size: .78rem;
+    color: #888;
+    text-align: center;
+}
+
+.placeholder-banner {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #888;
+    grid-column: 1 / -1;
+}
+
+.placeholder-banner .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.placeholder-banner h2 {
+    color: #1a1a2e;
+    font-size: 1.2rem;
+    margin-bottom: .5rem;
+}
+
+.placeholder-banner p {
+    font-size: .9rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
