@@ -21,6 +21,12 @@ from app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.render_home, name="homepage"),
-    path('about/', views.render_about, name="about"),
+    path('', views.render_home, name='homepage'),
+    path('about/', views.render_about, name='about'),
+    # Authentication
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    # Password management
+    path('password-change/', views.password_change_view, name='password_change'),
+    path('password-change/done/', views.password_change_done_view, name='password_change_done'),
 ]
