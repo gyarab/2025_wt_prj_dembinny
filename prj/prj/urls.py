@@ -25,6 +25,7 @@ urlpatterns = [
     path('about/', views.render_about, name='about'),
     # Student dashboard
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('payments/pending/', views.pending_payments_view, name='pending_payments'),
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

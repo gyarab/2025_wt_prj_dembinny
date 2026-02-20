@@ -18,6 +18,72 @@ def _add_form_control_class(form):
     return form
 
 
+def _get_student_payment_data(user):
+    """
+    Central helper that computes all finance-related querysets and stats
+    for a given student.  Returned dict is passed directly into template context.
+    """
+    # All payment requests that apply to this student
+    assigned_requests = PaymentRequest.objects.filter(
+        Q(assign_to_all=True) | Q(assigned_to=user)
+    ).distinct()
+
+    confirmed_request_ids = list(Transaction.objects.filter(
+        student=user, status=Transaction.Status.CONFIRMED,
+    ).values_list('payment_request_id', flat=True))
+
+    pending_request_ids = list(Transaction.objects.filter(
+        student=user, status=Transaction.Status.PENDING,
+    ).values_list('payment_request_id', flat=True))
+
+    # Requests still awaiting payment (no confirmed or pending transaction yet)
+    # Sorted: overdue first, then by due_date ascending, then no due_date last
+    unpaid_requests = (
+        assigned_requests
+        .exclude(id__in=confirmed_request_ids + pending_request_ids)
+        .order_by('due_date')          # NULLs sort last in SQLite ascending
+    )
+
+    # Requests the student submitted payment for but the treasurer hasn't confirmed yet
+    awaiting_requests = assigned_requests.filter(id__in=pending_request_ids)
+
+    # Full transaction history, newest first
+    my_transactions = (
+        Transaction.objects
+        .filter(student=user)
+        .select_related('payment_request')
+        .order_by('-created_at')
+    )
+
+    total_owed = (
+        assigned_requests
+        .exclude(id__in=confirmed_request_ids)
+        .aggregate(s=Sum('amount'))['s'] or 0
+    )
+
+    total_paid = (
+        Transaction.objects
+        .filter(student=user, status=Transaction.Status.CONFIRMED)
+        .aggregate(s=Sum('amount'))['s'] or 0
+    )
+
+    today = timezone.now().date()
+
+    # Attach an `is_overdue` flag per unpaid request for use in templates
+    for req in unpaid_requests:
+        req.is_overdue = bool(req.due_date and req.due_date < today)
+
+    return {
+        'assigned_requests':   assigned_requests,
+        'unpaid_requests':     unpaid_requests,
+        'awaiting_requests':   awaiting_requests,
+        'my_transactions':     my_transactions,
+        'total_owed':          total_owed,
+        'total_paid':          total_paid,
+        'today':               today,
+    }
+
+
 # ── Public pages ─────────────────────────────────────────────────────────────
 
 def render_home(req):
@@ -37,67 +103,36 @@ def render_about(req):
 def dashboard_view(req):
     """
     Personal dashboard for any logged-in user.
-
-    Pulls:
-      • Payment requests assigned to this student (all-class or explicitly assigned)
-      • Their own transactions, grouped by status
-      • Published expenses so they can see how the fund is being spent
+    Shows summary cards + abbreviated tables.  Full detail is on dedicated pages.
     """
-    user = req.user
+    context = _get_student_payment_data(req.user)
 
-    # All payment requests that apply to this student
-    assigned_requests = PaymentRequest.objects.filter(
-        Q(assign_to_all=True) | Q(assigned_to=user)
-    ).distinct()
+    # Dashboard shows only the most recent 5 transactions and 10 expenses
+    context['my_transactions']  = context['my_transactions'][:5]
+    context['recent_expenses']  = Expense.objects.filter(
+        is_published=True
+    ).order_by('-spent_at')[:5]
 
-    # IDs of requests the student has already paid (confirmed)
-    confirmed_request_ids = Transaction.objects.filter(
-        student=user,
-        status=Transaction.Status.CONFIRMED,
-    ).values_list('payment_request_id', flat=True)
+    return render(req, 'dashboard.html', context)
 
-    # IDs of requests the student has a pending payment for
-    pending_request_ids = Transaction.objects.filter(
-        student=user,
-        status=Transaction.Status.PENDING,
-    ).values_list('payment_request_id', flat=True)
 
-    # Requests still awaiting payment (no confirmed or pending transaction yet)
-    unpaid_requests = assigned_requests.exclude(
-        id__in=list(confirmed_request_ids) + list(pending_request_ids)
-    )
+# ── Pending Payments (full dedicated view) ────────────────────────────────────
 
-    # Requests with a pending (unconfirmed) transaction
-    awaiting_requests = assigned_requests.filter(id__in=pending_request_ids)
-
-    # Full transaction history for this student, newest first
-    my_transactions = Transaction.objects.filter(student=user).select_related(
-        'payment_request'
-    ).order_by('-created_at')
-
-    # Summary stats
-    total_owed = assigned_requests.exclude(
-        id__in=confirmed_request_ids
-    ).aggregate(s=Sum('amount'))['s'] or 0
-
-    total_paid = Transaction.objects.filter(
-        student=user,
-        status=Transaction.Status.CONFIRMED,
-    ).aggregate(s=Sum('amount'))['s'] or 0
-
-    # Recent published expenses (last 10)
-    recent_expenses = Expense.objects.filter(is_published=True).order_by('-spent_at')[:10]
+@login_required
+def pending_payments_view(req):
+    """
+    Dedicated page listing every payment request the student still owes,
+    sorted with overdue items first, then by due date.
+    """
+    data = _get_student_payment_data(req.user)
 
     context = {
-        'unpaid_requests':   unpaid_requests,
-        'awaiting_requests': awaiting_requests,
-        'my_transactions':   my_transactions,
-        'recent_expenses':   recent_expenses,
-        'total_owed':        total_owed,
-        'total_paid':        total_paid,
-        'today':             timezone.now().date(),
+        'unpaid_requests':   data['unpaid_requests'],
+        'awaiting_requests': data['awaiting_requests'],
+        'total_owed':        data['total_owed'],
+        'today':             data['today'],
     }
-    return render(req, 'dashboard.html', context)
+    return render(req, 'pending_payments.html', context)
 
 
 # ── Authentication ────────────────────────────────────────────────────────────
