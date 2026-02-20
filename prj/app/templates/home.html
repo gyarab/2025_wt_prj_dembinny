@@ -1,8 +1,94 @@
 {% extends 'base.html' %}
-{% block title %} Home {% endblock %}
+{% block title %}Class Fund Manager{% endblock %}
 {% block content %}
-<h1>Home</h1>
-<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Fuga voluptatem, adipisci repellat rem deleniti
-    consectetur provident laboriosam error, non at iusto minima. Laudantium ab assumenda cum quidem, consectetur
-    pariatur quibusdam?</p>
+<style>
+    .hero {
+        text-align: center;
+        padding: 4rem 1rem 3rem;
+    }
+
+    .hero h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #1a1a2e;
+    }
+
+    .hero p {
+        font-size: 1.1rem;
+        color: #555;
+        margin: 1rem auto;
+        max-width: 540px;
+    }
+
+    .hero .btn-login {
+        display: inline-block;
+        margin-top: 1.5rem;
+        background: #1a1a2e;
+        color: #e2b96f;
+        padding: .75rem 2rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: background .2s;
+    }
+
+    .hero .btn-login:hover {
+        background: #2d2d4e;
+    }
+
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+        margin-top: 2.5rem;
+    }
+
+    .feature-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
+        text-align: center;
+    }
+
+    .feature-card .icon {
+        font-size: 2rem;
+        margin-bottom: .5rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1rem;
+        margin-bottom: .4rem;
+    }
+
+    .feature-card p {
+        font-size: .85rem;
+        color: #666;
+    }
+</style>
+
+<div class="hero">
+    <h1>💰 Class Fund Manager</h1>
+    <p>A transparent, easy-to-use platform for tracking class payments and expenses.</p>
+    <a class="btn-login" href="{% url 'login' %}">Log In to Your Account</a>
+</div>
+
+<div class="features">
+    <div class="feature-card">
+        <div class="icon">📋</div>
+        <h3>Payment Requests</h3>
+        <p>See exactly what you owe and when it's due.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">✅</div>
+        <h3>Confirmed Payments</h3>
+        <p>Track which of your payments have been verified by the treasurer.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">💸</div>
+        <h3>Fund Transparency</h3>
+        <p>See a full log of how the collected money is being spent.</p>
+    </div>
+</div>
 {% endblock %}
