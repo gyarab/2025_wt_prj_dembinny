@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Log In — Class Fund Manager{% endblock %}
+
+{% block content %}
+<style>
+    .auth-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+        max-width: 420px;
+        margin: 3rem auto;
+        padding: 2rem 2.5rem;
+    }
+
+    .auth-card h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #1a1a2e;
+    }
+
+    .form-group {
+        margin-bottom: 1.1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: .85rem;
+        font-weight: 600;
+        margin-bottom: .35rem;
+        color: #444;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: .55rem .75rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: .95rem;
+        transition: border-color .2s;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #1a1a2e;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: .65rem;
+        background: #1a1a2e;
+        color: #e2b96f;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: .5rem;
+        transition: background .2s;
+    }
+
+    .btn-primary:hover {
+        background: #2d2d4e;
+    }
+</style>
+
+<div class="auth-card">
+    <h1>🔐 Log In</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            <input type="text" id="id_username" name="username" autofocus autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="id_password">Password</label>
+            <input type="password" id="id_password" name="password" autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" class="btn-primary">Log In</button>
+    </form>
+</div>
+{% endblock %}
