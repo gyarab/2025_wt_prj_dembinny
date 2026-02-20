@@ -821,13 +821,21 @@ main {
     background: #fff;
     border-radius: 8px;
     padding: 1.25rem 1.5rem;
-    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
     border-left: 4px solid #1a1a2e;
 }
 
-.fund-card.income  { border-color: #28a745; }
-.fund-card.expense { border-color: #dc3545; }
-.fund-card.balance { border-color: #1a1a2e; }
+.fund-card.income {
+    border-color: #28a745;
+}
+
+.fund-card.expense {
+    border-color: #dc3545;
+}
+
+.fund-card.balance {
+    border-color: #1a1a2e;
+}
 
 .fund-card .fc-label {
     font-size: .75rem;
@@ -843,8 +851,13 @@ main {
     color: #1a1a2e;
 }
 
-.fund-card.balance .fc-value { color: #1a1a2e; }
-.fund-card.balance .fc-value.negative { color: #dc3545; }
+.fund-card.balance .fc-value {
+    color: #1a1a2e;
+}
+
+.fund-card.balance .fc-value.negative {
+    color: #dc3545;
+}
 
 /* Progress bar */
 .progress-wrap {
@@ -863,8 +876,13 @@ main {
     transition: width .4s;
 }
 
-.progress-bar.partial { background: #ffc107; }
-.progress-bar.low     { background: #dc3545; }
+.progress-bar.partial {
+    background: #ffc107;
+}
+
+.progress-bar.low {
+    background: #dc3545;
+}
 
 /* Requests overview table — extra columns */
 .req-progress {
@@ -882,14 +900,36 @@ main {
     flex-wrap: wrap;
 }
 
-.req-progress .counts .cnt-ok      { color: #28a745; font-weight: 700; }
-.req-progress .counts .cnt-pending { color: #856404; font-weight: 700; }
-.req-progress .counts .cnt-missing { color: #dc3545; font-weight: 700; }
+.req-progress .counts .cnt-ok {
+    color: #28a745;
+    font-weight: 700;
+}
+
+.req-progress .counts .cnt-pending {
+    color: #856404;
+    font-weight: 700;
+}
+
+.req-progress .counts .cnt-missing {
+    color: #dc3545;
+    font-weight: 700;
+}
 
 /* Student rows */
-.student-status-ok      { color: #28a745; font-weight: 700; }
-.student-status-partial { color: #856404; font-weight: 700; }
-.student-status-bad     { color: #dc3545; font-weight: 700; }
+.student-status-ok {
+    color: #28a745;
+    font-weight: 700;
+}
+
+.student-status-partial {
+    color: #856404;
+    font-weight: 700;
+}
+
+.student-status-bad {
+    color: #dc3545;
+    font-weight: 700;
+}
 
 /* Pending transactions queue */
 .tx-queue {
@@ -901,7 +941,7 @@ main {
 .tx-card {
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 1px 5px rgba(0,0,0,.07);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, .07);
     padding: .85rem 1.25rem;
     display: grid;
     grid-template-columns: 1fr auto;
@@ -910,8 +950,16 @@ main {
     align-items: center;
 }
 
-.tx-card .tx-title  { font-weight: 700; font-size: .95rem; }
-.tx-card .tx-meta   { font-size: .8rem; color: #666; }
+.tx-card .tx-title {
+    font-weight: 700;
+    font-size: .95rem;
+}
+
+.tx-card .tx-meta {
+    font-size: .8rem;
+    color: #666;
+}
+
 .tx-card .tx-amount {
     font-size: 1.2rem;
     font-weight: 800;
@@ -947,5 +995,10 @@ main {
     border-color: #1a1a2e;
 }
 
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
