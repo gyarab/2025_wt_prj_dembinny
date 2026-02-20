@@ -2,152 +2,6 @@
 {% block title %}Dashboard — Class Fund Manager{% endblock %}
 
 {% block content %}
-<style>
-    /* ── Greeting ── */
-    .greeting {
-        margin-bottom: 1.75rem;
-    }
-
-    .greeting h1 {
-        font-size: 1.75rem;
-        font-weight: 700;
-    }
-
-    .greeting p {
-        color: #555;
-        margin-top: .25rem;
-        font-size: .95rem;
-    }
-
-    /* ── Summary cards ── */
-    .stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: #fff;
-        border-radius: 8px;
-        padding: 1.25rem 1.5rem;
-        box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
-        border-left: 4px solid #1a1a2e;
-    }
-
-    .stat-card.danger {
-        border-color: #dc3545;
-    }
-
-    .stat-card.success {
-        border-color: #28a745;
-    }
-
-    .stat-card.warning {
-        border-color: #ffc107;
-    }
-
-    .stat-card .label {
-        font-size: .78rem;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        color: #888;
-    }
-
-    .stat-card .value {
-        font-size: 1.6rem;
-        font-weight: 700;
-        margin-top: .2rem;
-        color: #1a1a2e;
-    }
-
-    /* ── Section headings ── */
-    .section {
-        margin-bottom: 2.25rem;
-    }
-
-    .section h2 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        border-bottom: 2px solid #e8e8e8;
-        padding-bottom: .4rem;
-        margin-bottom: 1rem;
-    }
-
-    /* ── Tables ── */
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: .9rem;
-    }
-
-    .data-table th {
-        text-align: left;
-        padding: .55rem .75rem;
-        background: #1a1a2e;
-        color: #e2b96f;
-        font-weight: 600;
-        font-size: .8rem;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-    }
-
-    .data-table td {
-        padding: .55rem .75rem;
-        border-bottom: 1px solid #eee;
-    }
-
-    .data-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .data-table tr:hover td {
-        background: #f9f9f9;
-    }
-
-    /* ── Badges ── */
-    .badge {
-        display: inline-block;
-        padding: .2rem .55rem;
-        border-radius: 12px;
-        font-size: .75rem;
-        font-weight: 600;
-    }
-
-    .badge-danger {
-        background: #f8d7da;
-        color: #721c24;
-    }
-
-    .badge-warning {
-        background: #fff3cd;
-        color: #856404;
-    }
-
-    .badge-success {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .badge-secondary {
-        background: #e2e3e5;
-        color: #383d41;
-    }
-
-    /* ── Empty states ── */
-    .empty {
-        color: #888;
-        font-style: italic;
-        padding: .75rem 0;
-        font-size: .9rem;
-    }
-
-    /* ── Overdue highlight ── */
-    .overdue {
-        color: #dc3545;
-        font-weight: 600;
-    }
-</style>
 
 <!-- Greeting -->
 <div class="greeting">
@@ -178,7 +32,8 @@
 <!-- Unpaid payment requests -->
 <div class="section">
     <h2>📋 Payments Due
-        <a href="{% url 'pending_payments' %}" style="font-size:.8rem;font-weight:400;margin-left:.75rem;color:#1a1a2e;">View all →</a>
+        <a href="{% url 'pending_payments' %}"
+            style="font-size:.8rem;font-weight:400;margin-left:.75rem;color:#1a1a2e;">View all →</a>
     </h2>
     {% if unpaid_requests %}
     <table class="data-table">
@@ -193,19 +48,20 @@
         </thead>
         <tbody>
             {% for req in unpaid_requests %}
-            <tr>
+            <tr class="clickable-row" onclick="window.location='{% url 'pending_payments' %}'"
+                title="View all pending payments">
                 <td><strong>{{ req.title }}</strong></td>
                 <td style="color:#666;font-size:.85rem;">{{ req.description|truncatechars:60|default:"—" }}</td>
                 <td><strong>{{ req.amount }} CZK</strong></td>
                 <td>
                     {% if req.due_date %}
-                        {% if req.is_overdue %}
-                            <span class="overdue">{{ req.due_date|date:"d.m.Y" }} ⚠ Overdue</span>
-                        {% else %}
-                            {{ req.due_date|date:"d.m.Y" }}
-                        {% endif %}
+                    {% if req.is_overdue %}
+                    <span class="overdue">{{ req.due_date|date:"d.m.Y" }} ⚠ Overdue</span>
                     {% else %}
-                        <span style="color:#aaa;">—</span>
+                    {{ req.due_date|date:"d.m.Y" }}
+                    {% endif %}
+                    {% else %}
+                    <span style="color:#aaa;">—</span>
                     {% endif %}
                 </td>
                 <td><span class="badge badge-danger">Unpaid</span></td>
@@ -233,7 +89,8 @@
         </thead>
         <tbody>
             {% for req in awaiting_requests %}
-            <tr>
+            <tr class="clickable-row" onclick="window.location='{% url 'pending_payments' %}'"
+                title="View all pending payments">
                 <td>{{ req.title }}</td>
                 <td>{{ req.amount }} CZK</td>
                 <td>{{ req.due_date|date:"d.m.Y"|default:"—" }}</td>
@@ -308,8 +165,20 @@
             {% endfor %}
         </tbody>
     </table>
-    {% else %}
-    <p class="empty">No expenses recorded yet.</p>
     {% endif %}
-</div>
-{% endblock %}
+    <!-- How to Pay teaser -->
+    <div class="section">
+        <h2>🏦 How to Pay</h2>
+        <div
+            style="background:#fff;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.07);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div>
+                <strong style="font-size:1rem;">Bank transfer details &amp; QR code</strong>
+                <p style="color:#666;font-size:.88rem;margin-top:.3rem;">Scan the QR code or copy the account number to
+                    pay directly from your banking app.</p>
+            </div>
+            <a href="{% url 'payment_info' %}"
+                style="background:#1a1a2e;color:#e2b96f;padding:.6rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:600;white-space:nowrap;">View
+                Details →</a>
+        </div>
+    </div>
+    {% endblock %}

@@ -1,1 +1,3 @@
 django
+qrcode[pil]
+Pillow

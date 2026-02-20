@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Expense, PaymentRequest, Transaction, User
+from .models import BankAccount, Expense, PaymentRequest, Transaction, User
 
 
 @admin.register(User)
@@ -37,6 +37,12 @@ class PaymentRequestAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             "fields": ("title", "description", "amount", "due_date", "created_by"),
+        }),
+        ("Czech Bank Symbols", {
+            "fields": ("variable_symbol", "specific_symbol"),
+            "description": "Variable Symbol (VS) identifies the payment purpose; "
+                           "Specific Symbol (SS) optionally identifies the payer. "
+                           "Both are embedded in the per-payment QR code.",
         }),
         ("Assignment", {
             "fields": ("assign_to_all", "assigned_to"),
@@ -90,3 +96,11 @@ class ExpenseAdmin(admin.ModelAdmin):
             "classes": ("collapse",),
         }),
     )
+
+
+@admin.register(BankAccount)
+class BankAccountAdmin(admin.ModelAdmin):
+    list_display  = ("owner_name", "account_number", "iban", "bank_name", "is_active", "updated_at")
+    list_filter   = ("is_active",)
+    search_fields = ("owner_name", "account_number", "iban")
+    readonly_fields = ("updated_at",)
