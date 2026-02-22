@@ -41,8 +41,7 @@
 
         <div class="pr-row">
             <div class="pr-field {% if form.amount.errors %}has-error{% endif %}">
-                <label for="{{ form.amount.id_for_label }}">{{ form.amount.label }}<span
-                        class="required">*</span></label>
+                <label for="{{ form.amount.id_for_label }}">{{ form.amount.label }}<span class="required">*</span></label>
                 {{ form.amount }}
                 {% if form.amount.help_text %}<p class="help-text">{{ form.amount.help_text }}</p>{% endif %}
                 {% if form.amount.errors %}
@@ -68,8 +67,7 @@
             <div class="pr-field {% if form.variable_symbol.errors %}has-error{% endif %}">
                 <label for="{{ form.variable_symbol.id_for_label }}">{{ form.variable_symbol.label }}</label>
                 {{ form.variable_symbol }}
-                {% if form.variable_symbol.help_text %}<p class="help-text">{{ form.variable_symbol.help_text }}</p>{%
-                endif %}
+                {% if form.variable_symbol.help_text %}<p class="help-text">{{ form.variable_symbol.help_text }}</p>{% endif %}
                 {% if form.variable_symbol.errors %}
                 <ul class="field-errors">{% for e in form.variable_symbol.errors %}<li>{{ e }}</li>{% endfor %}</ul>
                 {% endif %}
@@ -78,8 +76,7 @@
             <div class="pr-field {% if form.specific_symbol.errors %}has-error{% endif %}">
                 <label for="{{ form.specific_symbol.id_for_label }}">{{ form.specific_symbol.label }}</label>
                 {{ form.specific_symbol }}
-                {% if form.specific_symbol.help_text %}<p class="help-text">{{ form.specific_symbol.help_text }}</p>{%
-                endif %}
+                {% if form.specific_symbol.help_text %}<p class="help-text">{{ form.specific_symbol.help_text }}</p>{% endif %}
                 {% if form.specific_symbol.errors %}
                 <ul class="field-errors">{% for e in form.specific_symbol.errors %}<li>{{ e }}</li>{% endfor %}</ul>
                 {% endif %}
@@ -119,8 +116,7 @@
             <div class="student-checkbox-grid">
                 {% for student in students %}
                 <label class="student-checkbox-item">
-                    <input type="checkbox" name="assigned_to" value="{{ student.pk }}" class="student-cb" {% if student
-                        in form.assigned_to.value %}checked{% endif %}>
+                    <input type="checkbox" name="assigned_to" value="{{ student.pk }}" class="student-cb" {% if student in form.assigned_to.value %}checked{% endif %}>
                     <span class="student-cb-name">
                         {{ student.get_full_name|default:student.username }}
                         {% if student.email %}
