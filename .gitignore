@@ -1,2 +1,21 @@
+# Database
 db.sqlite3
+
+# Python byte-code
 *.pyc
+*.pyo
+__pycache__/
+
+# Environment variables – never commit secrets
+.env
+
+# Virtual environment
+.venv/
+venv/
+
+# collectstatic output
+staticfiles/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}{% if instance %}Edit Expense{% else %}Log Expense{% endif %} — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 fw-bold mb-0">💸 {% if instance %}Edit Expense{% else %}Log New Expense{% endif %}</h1>
+    <a href="{% url 'treasurer_dashboard' %}" class="btn btn-outline-secondary btn-sm">← Back to dashboard</a>
+</div>
+
+{% if form.non_field_errors %}
+<div class="alert alert-danger">
+    {% for error in form.non_field_errors %}<p class="mb-0">{{ error }}</p>{% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="log-expense-form">
+    {% csrf_token %}
+
+    <!-- ── What was spent on? ───────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">🛍 What was spent on?</h5></div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }} <span class="text-danger">*</span></label>
+                <input type="text" id="{{ form.title.id_for_label }}" name="{{ form.title.html_name }}"
+                    class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                    value="{{ form.title.value|default:'' }}">
+                {% if form.title.errors %}<div class="invalid-feedback">{% for e in form.title.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                <textarea id="{{ form.description.id_for_label }}" name="{{ form.description.html_name }}"
+                    class="form-control {% if form.description.errors %}is-invalid{% endif %}" rows="3">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}<div class="invalid-feedback">{% for e in form.description.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Amount & Category ────────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">💰 Amount & Category</h5></div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }} <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" id="{{ form.amount.id_for_label }}" name="{{ form.amount.html_name }}"
+                        class="form-control {% if form.amount.errors %}is-invalid{% endif %}"
+                        value="{{ form.amount.value|default:'' }}">
+                    {% if form.amount.errors %}<div class="invalid-feedback">{% for e in form.amount.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }} <span class="text-danger">*</span></label>
+                    {{ form.category }}
+                    {% if form.category.errors %}<div class="invalid-feedback d-block">{% for e in form.category.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Date & Visibility ────────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">📅 Date & Visibility</h5></div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label for="{{ form.spent_at.id_for_label }}" class="form-label">{{ form.spent_at.label }} <span class="text-danger">*</span></label>
+                    <input type="date" id="{{ form.spent_at.id_for_label }}" name="{{ form.spent_at.html_name }}"
+                        class="form-control {% if form.spent_at.errors %}is-invalid{% endif %}"
+                        value="{{ form.spent_at.value|default:'' }}">
+                    {% if form.spent_at.errors %}<div class="invalid-feedback">{% for e in form.spent_at.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check mt-2">
+                        {{ form.is_published }}
+                        <label class="form-check-label fw-semibold" for="{{ form.is_published.id_for_label }}">
+                            {{ form.is_published.label }}
+                        </label>
+                        {% if form.is_published.help_text %}<div class="form-text">{{ form.is_published.help_text }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Actions ──────────────────────────────────────────────────────── -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button type="submit" class="btn btn-cfm">
+            {% if instance %}💾 Save Changes{% else %}💸 Log Expense{% endif %}
+        </button>
+        <a href="{% url 'treasurer_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+
+        {% if instance %}
+        <form method="post" action="{% url 'delete_expense' instance.pk %}" class="ms-auto"
+            onsubmit="return confirm('Delete this expense permanently?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">🗑 Delete</button>
+        </form>
+        {% endif %}
+    </div>
+
+</form>
+
+{% endblock %}

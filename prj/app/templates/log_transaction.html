@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% block title %}Log Bank Transfer — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 fw-bold mb-0">💳 Log Bank Transfer</h1>
+    <a href="{% url 'treasurer_dashboard' %}" class="btn btn-outline-secondary btn-sm">← Back to dashboard</a>
+</div>
+
+{% if pending_tx %}
+<div class="alert alert-info d-flex gap-3 align-items-start mb-4">
+    <span class="fs-4">⏳</span>
+    <div>
+        <strong>Confirming a pending submission</strong><br>
+        {{ pending_tx.student.get_full_name|default:pending_tx.student.username }} submitted this
+        payment on {{ pending_tx.created_at|date:"d.m.Y" }}.
+        Logging it here will remove the pending record and mark it as <strong>Confirmed</strong>.
+    </div>
+</div>
+{% endif %}
+
+{% if form.non_field_errors %}
+<div class="alert alert-danger">
+    {% for error in form.non_field_errors %}<p class="mb-0">{{ error }}</p>{% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="log-tx-form">
+    {% csrf_token %}
+
+    <!-- ── Who paid? ────────────────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">👤 Who Made the Transfer?</h5></div>
+        <div class="card-body">
+            <div class="mb-0">
+                <label for="{{ form.student.id_for_label }}" class="form-label">{{ form.student.label }} <span class="text-danger">*</span></label>
+                <select name="student" id="{{ form.student.id_for_label }}" class="form-select {% if form.student.errors %}is-invalid{% endif %}">
+                    <option value="">— select student —</option>
+                    {% for student in students %}
+                    <option value="{{ student.pk }}" {% if form.student.value|stringformat:"s" == student.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ student.get_full_name|default:student.username }}
+                        {% if student.email %}({{ student.email }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if form.student.errors %}<div class="invalid-feedback">{% for e in form.student.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Which payment request? ───────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">📋 Which Payment Request?</h5></div>
+        <div class="card-body">
+            <div class="mb-0">
+                <label for="{{ form.payment_request.id_for_label }}" class="form-label">{{ form.payment_request.label }} <span class="text-danger">*</span></label>
+                <select name="payment_request" id="{{ form.payment_request.id_for_label }}"
+                    class="form-select {% if form.payment_request.errors %}is-invalid{% endif %}"
+                    {% if not form.student.value %}disabled{% endif %}>
+                    <option value="">— select payment request —</option>
+                    {% for pr in form.payment_request.field.queryset %}
+                    <option value="{{ pr.pk }}" data-amount="{{ pr.amount }}" {% if form.payment_request.value|stringformat:"s" == pr.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ pr }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if form.payment_request.help_text %}<div class="form-text">{{ form.payment_request.help_text }}</div>{% endif %}
+                {% if form.payment_request.errors %}<div class="invalid-feedback">{% for e in form.payment_request.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Transfer details ─────────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">💰 Transfer Details</h5></div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }} <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" id="{{ form.amount.id_for_label }}" name="{{ form.amount.html_name }}"
+                        class="form-control {% if form.amount.errors %}is-invalid{% endif %}"
+                        value="{{ form.amount.value|default:'' }}">
+                    {% if form.amount.help_text %}<div class="form-text">{{ form.amount.help_text }}</div>{% endif %}
+                    {% if form.amount.errors %}<div class="invalid-feedback">{% for e in form.amount.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.paid_at.id_for_label }}" class="form-label">{{ form.paid_at.label }} <span class="text-danger">*</span></label>
+                    <input type="date" id="{{ form.paid_at.id_for_label }}" name="{{ form.paid_at.html_name }}"
+                        class="form-control {% if form.paid_at.errors %}is-invalid{% endif %}"
+                        value="{{ form.paid_at.value|default:'' }}">
+                    {% if form.paid_at.help_text %}<div class="form-text">{{ form.paid_at.help_text }}</div>{% endif %}
+                    {% if form.paid_at.errors %}<div class="invalid-feedback">{% for e in form.paid_at.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Status selector -->
+            <div class="mb-3">
+                <label class="form-label">{{ form.status.label }} <span class="text-danger">*</span></label>
+                <div class="d-flex gap-2 flex-wrap" id="status-radio-group">
+                    {% for val, lbl in form.status.field.choices %}
+                    <div class="form-check form-check-inline status-radio-item status-radio-{{ val }} border rounded px-3 py-2">
+                        <input class="form-check-input" type="radio" name="status" id="status-{{ val }}" value="{{ val }}"
+                            {% if form.status.value == val or form.status.field.initial == val and not form.status.value %}checked{% endif %}>
+                        <label class="form-check-label" for="status-{{ val }}">
+                            {% if val == 'confirmed' %}✅{% elif val == 'pending' %}⏳{% else %}❌{% endif %} {{ lbl }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if form.status.help_text %}<div class="form-text mt-1">{{ form.status.help_text }}</div>{% endif %}
+                {% if form.status.errors %}<div class="text-danger small mt-1">{% for e in form.status.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+
+            <div class="mb-0">
+                <label for="{{ form.note.id_for_label }}" class="form-label">{{ form.note.label }}</label>
+                <textarea id="{{ form.note.id_for_label }}" name="{{ form.note.html_name }}"
+                    class="form-control {% if form.note.errors %}is-invalid{% endif %}" rows="2">{{ form.note.value|default:'' }}</textarea>
+                {% if form.note.errors %}<div class="invalid-feedback">{% for e in form.note.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Summary preview ──────────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3" id="tx-preview" style="display:none;">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">🔍 Summary</h5></div>
+        <div class="card-body">
+            <div class="row g-2 small">
+                <div class="col-4 text-muted">Student</div><div class="col-8 fw-semibold" id="prev-student">—</div>
+                <div class="col-4 text-muted">Payment Request</div><div class="col-8 fw-semibold" id="prev-request">—</div>
+                <div class="col-4 text-muted">Amount</div><div class="col-8 fw-semibold" id="prev-amount">—</div>
+                <div class="col-4 text-muted">Status after save</div><div class="col-8" id="prev-status"><span class="badge bg-success">✅ Confirmed</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Actions ──────────────────────────────────────────────────────── -->
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-cfm" id="submit-btn">✓ Log Transfer</button>
+        <a href="{% url 'treasurer_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+
+<!-- Embed requests-by-student data for JS -->
+<script>
+    (function () {
+        const REQUESTS_BY_STUDENT = {{ requests_by_student | safe }};
+    const API_BASE = "{% url 'student_requests_json' student_id=0 %}".replace('/0/', '/');
+
+    const studentSel = document.getElementById('{{ form.student.id_for_label }}');
+    const prSel = document.getElementById('{{ form.payment_request.id_for_label }}');
+    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+    const preview = document.getElementById('tx-preview');
+    const prevStudent = document.getElementById('prev-student');
+    const prevRequest = document.getElementById('prev-request');
+    const prevAmount = document.getElementById('prev-amount');
+    const prevStatus = document.getElementById('prev-status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    const preSelectedPR = "{{ form.payment_request.value|default:'' }}";
+    const preSelectedAmount = "{{ form.amount.value|default:'' }}";
+
+    const STATUS_META = {
+        confirmed: { badge: 'bg-success', icon: '✅', label: 'Confirmed', btn: '✓ Log as Confirmed' },
+        pending: { badge: 'bg-warning text-dark', icon: '⏳', label: 'Pending', btn: '⏳ Log as Pending' },
+        rejected: { badge: 'bg-danger', icon: '❌', label: 'Rejected', btn: '✗ Log as Rejected' },
+    };
+
+    function getSelectedStatus() {
+        const checked = document.querySelector('input[name="status"]:checked');
+        return checked ? checked.value : 'confirmed';
+    }
+
+    function updateStatusPreview() {
+        const val = getSelectedStatus();
+        const meta = STATUS_META[val] || STATUS_META.confirmed;
+        if (prevStatus) {
+            prevStatus.innerHTML = `<span class="badge ${meta.badge}">${meta.icon} ${meta.label}</span>`;
+        }
+        if (submitBtn) {
+            submitBtn.textContent = meta.btn;
+        }
+    }
+
+    function populatePR(list, keepValue) {
+        const current = keepValue || prSel.value;
+        prSel.innerHTML = '<option value="">— select payment request —</option>';
+        list.forEach(function (pr) {
+            const opt = document.createElement('option');
+            opt.value = pr.id;
+            opt.textContent = pr.title;
+            opt.dataset.amount = pr.amount;
+            if (String(pr.id) === String(current)) opt.selected = true;
+            prSel.appendChild(opt);
+        });
+        prSel.disabled = list.length === 0;
+        syncAmount();
+        updatePreview();
+    }
+
+    function syncAmount() {
+        const opt = prSel.options[prSel.selectedIndex];
+        if (opt && opt.dataset.amount && !amountInput.dataset.userEdited) {
+            amountInput.value = opt.dataset.amount;
+        }
+    }
+
+    function updatePreview() {
+        const sOpt = studentSel.options[studentSel.selectedIndex];
+        const pOpt = prSel.options[prSel.selectedIndex];
+        if (sOpt && sOpt.value && pOpt && pOpt.value) {
+            prevStudent.textContent = sOpt.text.trim();
+            prevRequest.textContent = pOpt.text.trim();
+            prevAmount.textContent = (amountInput.value || '—') + ' CZK';
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+        updateStatusPreview();
+    }
+
+    studentSel.addEventListener('change', function () {
+        const sid = this.value;
+        if (!sid) {
+            prSel.innerHTML = '<option value="">— select payment request —</option>';
+            prSel.disabled = true;
+            preview.style.display = 'none';
+            return;
+        }
+        const list = REQUESTS_BY_STUDENT[sid];
+        if (list !== undefined) {
+            populatePR(list, null);
+        } else {
+            fetch(API_BASE + sid + '/')
+                .then(r => r.json())
+                .then(data => populatePR(data, null))
+                .catch(() => populatePR([], null));
+        }
+        updatePreview();
+    });
+
+    prSel.addEventListener('change', function () {
+        amountInput.dataset.userEdited = '';
+        syncAmount();
+        updatePreview();
+    });
+
+    amountInput.addEventListener('input', function () {
+        this.dataset.userEdited = '1';
+        updatePreview();
+    });
+
+    document.querySelectorAll('input[name="status"]').forEach(function (radio) {
+        radio.addEventListener('change', updateStatusPreview);
+    });
+
+    if (studentSel.value) {
+        const list = REQUESTS_BY_STUDENT[studentSel.value];
+        if (list !== undefined) {
+            populatePR(list, preSelectedPR);
+            if (preSelectedAmount) {
+                amountInput.value = preSelectedAmount;
+                amountInput.dataset.userEdited = '1';
+            }
+        }
+        updatePreview();
+    }
+    updateStatusPreview();
+})();
+</script>
+
+{% endblock %}

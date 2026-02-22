@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}How to Pay — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 fw-bold mb-0">How to Pay</h1>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+</div>
+
+{% if account %}
+<div class="row g-4">
+
+    <!-- Account details -->
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">Class Bank Account</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Account Holder</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ account.owner_name }}</dd>
+
+                    <dt class="col-sm-4 text-muted">Account Number</dt>
+                    <dd class="col-sm-8">
+                        <span id="account-number" class="fw-semibold me-2">{{ account.account_number }}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyField('account-number', this)">Copy</button>
+                    </dd>
+
+                    {% if account.iban %}
+                    <dt class="col-sm-4 text-muted">IBAN</dt>
+                    <dd class="col-sm-8">
+                        <span id="iban" class="fw-semibold me-2">{{ account.iban }}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyField('iban', this)">Copy</button>
+                    </dd>
+                    {% endif %}
+
+                    {% if account.bank_name %}
+                    <dt class="col-sm-4 text-muted">Bank</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ account.bank_name }}</dd>
+                    {% endif %}
+                </dl>
+
+                {% if account.note %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <strong>Note from the treasurer:</strong><br>
+                    {{ account.note|linebreaksbr }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- QR code -->
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 h-100 text-center">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">Scan to Pay</h5>
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
+                {% if qr_base64 %}
+                <img src="data:image/png;base64,{{ qr_base64 }}" alt="Payment QR code" class="img-fluid mb-3" style="max-width:220px;">
+                <p class="text-muted small mb-0">Open your banking app and scan<br>this Czech Payment QR (SPD).</p>
+                {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted small p-4 mb-3" style="width:200px;height:200px;">
+                    QR code not available
+                </div>
+                <p class="text-muted small mb-0">Add an IBAN or account number<br>in the admin panel to enable QR.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% else %}
+
+<!-- No account configured yet -->
+<div class="card shadow-sm border-0">
+    <div class="card-body text-center py-5">
+        <div class="fs-1 mb-3">Under Construction</div>
+        <h2 class="h4 fw-bold mb-2">Payment details not yet configured</h2>
+        <p class="text-muted">The class treasurer has not set up the bank account details yet. Check back soon!</p>
+        {% if user.is_treasurer %}
+        <a href="/admin/app/bankaccount/add/" class="btn btn-cfm mt-2">Add Bank Account</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endif %}
+
+<script>
+    function copyField(id, btn) {
+        const text = document.getElementById(id).textContent.trim();
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Copied!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            setTimeout(() => {
+                btn.textContent = 'Copy';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        });
+    }
+</script>
+{% endblock %}

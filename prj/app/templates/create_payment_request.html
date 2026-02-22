@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}New Payment Request — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 fw-bold mb-0">📋 New Payment Request</h1>
+    <a href="{% url 'treasurer_dashboard' %}" class="btn btn-outline-secondary btn-sm">← Back to dashboard</a>
+</div>
+
+{% if form.non_field_errors %}
+<div class="alert alert-danger">
+    {% for error in form.non_field_errors %}<p class="mb-0">{{ error }}</p>{% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="pr-form">
+    {% csrf_token %}
+
+    <!-- ── Basic info ───────────────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">📝 Basic Information</h5></div>
+        <div class="card-body">
+            <div class="mb-3 {% if form.title.errors %}has-error{% endif %}">
+                <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }} <span class="text-danger">*</span></label>
+                <input type="text" id="{{ form.title.id_for_label }}" name="{{ form.title.html_name }}"
+                    class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                    value="{{ form.title.value|default:'' }}">
+                {% if form.title.errors %}<div class="invalid-feedback">{% for e in form.title.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                <textarea id="{{ form.description.id_for_label }}" name="{{ form.description.html_name }}"
+                    class="form-control {% if form.description.errors %}is-invalid{% endif %}" rows="3">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}<div class="invalid-feedback">{% for e in form.description.errors %}{{ e }}{% endfor %}</div>{% endif %}
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }} <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" id="{{ form.amount.id_for_label }}" name="{{ form.amount.html_name }}"
+                        class="form-control {% if form.amount.errors %}is-invalid{% endif %}"
+                        value="{{ form.amount.value|default:'' }}">
+                    {% if form.amount.help_text %}<div class="form-text">{{ form.amount.help_text }}</div>{% endif %}
+                    {% if form.amount.errors %}<div class="invalid-feedback">{% for e in form.amount.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.due_date.id_for_label }}" class="form-label">{{ form.due_date.label }}</label>
+                    <input type="date" id="{{ form.due_date.id_for_label }}" name="{{ form.due_date.html_name }}"
+                        class="form-control {% if form.due_date.errors %}is-invalid{% endif %}"
+                        value="{{ form.due_date.value|default:'' }}">
+                    {% if form.due_date.errors %}<div class="invalid-feedback">{% for e in form.due_date.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Czech bank symbols ───────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">🏦 Bank Payment Symbols <small class="text-muted fw-normal">(optional)</small></h5></div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.variable_symbol.id_for_label }}" class="form-label">{{ form.variable_symbol.label }}</label>
+                    <input type="text" id="{{ form.variable_symbol.id_for_label }}" name="{{ form.variable_symbol.html_name }}"
+                        class="form-control {% if form.variable_symbol.errors %}is-invalid{% endif %}"
+                        value="{{ form.variable_symbol.value|default:'' }}">
+                    {% if form.variable_symbol.help_text %}<div class="form-text">{{ form.variable_symbol.help_text }}</div>{% endif %}
+                    {% if form.variable_symbol.errors %}<div class="invalid-feedback">{% for e in form.variable_symbol.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.specific_symbol.id_for_label }}" class="form-label">{{ form.specific_symbol.label }}</label>
+                    <input type="text" id="{{ form.specific_symbol.id_for_label }}" name="{{ form.specific_symbol.html_name }}"
+                        class="form-control {% if form.specific_symbol.errors %}is-invalid{% endif %}"
+                        value="{{ form.specific_symbol.value|default:'' }}">
+                    {% if form.specific_symbol.help_text %}<div class="form-text">{{ form.specific_symbol.help_text }}</div>{% endif %}
+                    {% if form.specific_symbol.errors %}<div class="invalid-feedback">{% for e in form.specific_symbol.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Assignment ───────────────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom"><h5 class="mb-0 fw-bold">👥 Who Should Pay?</h5></div>
+        <div class="card-body">
+
+            <!-- Whole-class toggle -->
+            <div class="form-check mb-3" id="assign-all-row">
+                {{ form.assign_to_all }}
+                <label class="form-check-label" for="{{ form.assign_to_all.id_for_label }}">
+                    <strong>{{ form.assign_to_all.label }}</strong>
+                    {% if form.assign_to_all.help_text %}<span class="text-muted small d-block">{{ form.assign_to_all.help_text }}</span>{% endif %}
+                </label>
+            </div>
+
+            <!-- Specific student picker -->
+            <div id="student-picker">
+                {% if form.assigned_to.errors %}
+                <div class="alert alert-danger py-2 mb-2">
+                    {% for e in form.assigned_to.errors %}<div>{{ e }}</div>{% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-select-all">Select all</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-clear-all">Clear</button>
+                    <span class="text-muted small" id="picker-count">0 selected</span>
+                </div>
+
+                <div class="row g-2">
+                    {% for student in students %}
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input student-cb" id="stud-{{ student.pk }}"
+                                name="assigned_to" value="{{ student.pk }}"
+                                {% if student in form.assigned_to.value %}checked{% endif %}>
+                            <label class="form-check-label" for="stud-{{ student.pk }}">
+                                {{ student.get_full_name|default:student.username }}
+                                {% if student.email %}<small class="text-muted d-block">{{ student.email }}</small>{% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No student accounts found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Actions ──────────────────────────────────────────────────────── -->
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-cfm">✓ Create Payment Request</button>
+        <a href="{% url 'treasurer_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+
+</form>
+
+<script>
+    (function () {
+        const allCheckbox = document.getElementById('{{ form.assign_to_all.id_for_label }}');
+        const picker = document.getElementById('student-picker');
+        const studentCbs = document.querySelectorAll('.student-cb');
+        const countLabel = document.getElementById('picker-count');
+        const btnSelectAll = document.getElementById('btn-select-all');
+        const btnClearAll = document.getElementById('btn-clear-all');
+
+        function updateCount() {
+            const n = document.querySelectorAll('.student-cb:checked').length;
+            countLabel.textContent = n + ' selected';
+        }
+
+        function syncPicker() {
+            if (allCheckbox.checked) {
+                picker.style.display = 'none';
+            } else {
+                picker.style.display = 'block';
+                updateCount();
+            }
+        }
+
+        allCheckbox.addEventListener('change', syncPicker);
+        studentCbs.forEach(cb => cb.addEventListener('change', updateCount));
+
+        btnSelectAll.addEventListener('click', function () {
+            studentCbs.forEach(cb => cb.checked = true);
+            updateCount();
+        });
+
+        btnClearAll.addEventListener('click', function () {
+            studentCbs.forEach(cb => cb.checked = false);
+            updateCount();
+        });
+
+        syncPicker();
+    })();
+</script>
+
+{% endblock %}

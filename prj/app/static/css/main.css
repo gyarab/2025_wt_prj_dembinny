@@ -1,0 +1,101 @@
+/* ═══════════════════════════════════════════════════════════
+   Class Fund Manager – main stylesheet
+   Bootstrap 5 overrides & custom components
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Brand variables ── */
+:root {
+    --cfm-dark:  #1a1a2e;
+    --cfm-gold:  #e2b96f;
+    --cfm-light: #f5f7fa;
+}
+
+body {
+    background: var(--cfm-light);
+    color: var(--cfm-dark);
+}
+
+/* ── Navbar ── */
+.bg-cfm { background: var(--cfm-dark) !important; }
+.text-cfm-gold { color: var(--cfm-gold) !important; }
+.text-cfm-dark { color: var(--cfm-dark) !important; }
+.bg-cfm-gold   { background: var(--cfm-gold) !important; }
+
+.navbar-dark .navbar-nav .nav-link { color: #c9d1e0; }
+.navbar-dark .navbar-nav .nav-link:hover { color: var(--cfm-gold); }
+.navbar-brand { color: var(--cfm-gold) !important; }
+
+.btn-outline-cfm-gold {
+    border-color: var(--cfm-gold);
+    color: var(--cfm-gold);
+}
+.btn-outline-cfm-gold:hover {
+    background: var(--cfm-gold);
+    color: var(--cfm-dark);
+    border-color: var(--cfm-gold);
+}
+
+/* ── Brand primary button ── */
+.btn-cfm {
+    background: var(--cfm-dark);
+    color: var(--cfm-gold);
+    border: 1px solid var(--cfm-dark);
+}
+.btn-cfm:hover, .btn-cfm:focus {
+    background: #2a2a4e;
+    color: var(--cfm-gold);
+    border-color: #2a2a4e;
+}
+
+/* ── Hero section ── */
+.hero-section {
+    background: linear-gradient(135deg, var(--cfm-dark) 0%, #2a2a4e 100%);
+    color: #fff;
+    padding: 4rem 2rem;
+}
+.hero-section .text-muted { color: #b0b8cc !important; }
+.hero-section .lead { color: #c9d1e0; }
+
+/* ── Stat card accents ── */
+.stat-card-danger  { border-left: 3px solid #dc3545; }
+.stat-card-success { border-left: 3px solid #198754; }
+.stat-card-fund-pos { border-left: 3px solid #198754; background: #f0faf4; }
+.stat-card-fund-neg { border-left: 3px solid #dc3545; background: #fff5f5; }
+
+/* ── Timeline dots (budget page) ── */
+.tl-dot-bs {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #adb5bd;
+    flex-shrink: 0;
+}
+.cat-dot-trip        { background: #4e79a7; }
+.cat-dot-supplies    { background: #f28e2b; }
+.cat-dot-food        { background: #e15759; }
+.cat-dot-decoration  { background: #76b7b2; }
+.cat-dot-donation    { background: #59a14f; }
+.cat-dot-other       { background: #9c755f; }
+
+/* ── Category progress bars (budget page) ── */
+.cat-bar-trip        { background: #4e79a7 !important; }
+.cat-bar-supplies    { background: #f28e2b !important; }
+.cat-bar-food        { background: #e15759 !important; }
+.cat-bar-decoration  { background: #76b7b2 !important; }
+.cat-bar-donation    { background: #59a14f !important; }
+.cat-bar-other       { background: #9c755f !important; }
+
+/* ── Status radio items (log_transaction) ── */
+.status-radio-item { cursor: pointer; transition: background .15s; }
+.status-radio-item:hover { background: #f8f9fa; }
+.status-radio-confirmed { border-color: #198754 !important; }
+.status-radio-pending   { border-color: #ffc107 !important; }
+.status-radio-rejected  { border-color: #dc3545 !important; }
+
+/* ── QR details summary toggle ── */
+details > summary { cursor: pointer; }
+
+/* ── Responsive table on small screens ── */
+@media (max-width: 576px) {
+    .table-responsive .table { font-size: .82rem; }
+}
+
