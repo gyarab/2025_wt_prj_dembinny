@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}New Payment Request — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>📋 New Payment Request</h1>
+    <a href="{% url 'treasurer_dashboard' %}">← Back to dashboard</a>
+</div>
+
+{% if form.non_field_errors %}
+<div class="pr-form-errors">
+    {% for error in form.non_field_errors %}
+    <p>{{ error }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" class="pr-form" id="pr-form">
+    {% csrf_token %}
+
+    <!-- ── Basic info ───────────────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>📝 Basic Information</h2>
+
+        <div class="pr-field {% if form.title.errors %}has-error{% endif %}">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}<span class="required">*</span></label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <ul class="field-errors">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+
+        <div class="pr-field {% if form.description.errors %}has-error{% endif %}">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <ul class="field-errors">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+
+        <div class="pr-row">
+            <div class="pr-field {% if form.amount.errors %}has-error{% endif %}">
+                <label for="{{ form.amount.id_for_label }}">{{ form.amount.label }}<span
+                        class="required">*</span></label>
+                {{ form.amount }}
+                {% if form.amount.help_text %}<p class="help-text">{{ form.amount.help_text }}</p>{% endif %}
+                {% if form.amount.errors %}
+                <ul class="field-errors">{% for e in form.amount.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+
+            <div class="pr-field {% if form.due_date.errors %}has-error{% endif %}">
+                <label for="{{ form.due_date.id_for_label }}">{{ form.due_date.label }}</label>
+                {{ form.due_date }}
+                {% if form.due_date.errors %}
+                <ul class="field-errors">{% for e in form.due_date.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Czech bank symbols ───────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>🏦 Bank Payment Symbols <span class="optional-label">(optional)</span></h2>
+
+        <div class="pr-row">
+            <div class="pr-field {% if form.variable_symbol.errors %}has-error{% endif %}">
+                <label for="{{ form.variable_symbol.id_for_label }}">{{ form.variable_symbol.label }}</label>
+                {{ form.variable_symbol }}
+                {% if form.variable_symbol.help_text %}<p class="help-text">{{ form.variable_symbol.help_text }}</p>{%
+                endif %}
+                {% if form.variable_symbol.errors %}
+                <ul class="field-errors">{% for e in form.variable_symbol.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+
+            <div class="pr-field {% if form.specific_symbol.errors %}has-error{% endif %}">
+                <label for="{{ form.specific_symbol.id_for_label }}">{{ form.specific_symbol.label }}</label>
+                {{ form.specific_symbol }}
+                {% if form.specific_symbol.help_text %}<p class="help-text">{{ form.specific_symbol.help_text }}</p>{%
+                endif %}
+                {% if form.specific_symbol.errors %}
+                <ul class="field-errors">{% for e in form.specific_symbol.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Assignment ───────────────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>👥 Who Should Pay?</h2>
+
+        <!-- Whole-class toggle -->
+        <div class="pr-toggle-row" id="assign-all-row">
+            <label class="pr-toggle-label" for="{{ form.assign_to_all.id_for_label }}">
+                {{ form.assign_to_all }}
+                <span class="pr-toggle-text">
+                    <strong>{{ form.assign_to_all.label }}</strong>
+                    <em>{{ form.assign_to_all.help_text }}</em>
+                </span>
+            </label>
+        </div>
+
+        <!-- Specific student picker (hidden when assign_to_all is checked) -->
+        <div class="pr-student-picker" id="student-picker">
+            {% if form.assigned_to.errors %}
+            <ul class="field-errors" style="margin-bottom:.5rem;">
+                {% for e in form.assigned_to.errors %}<li>{{ e }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="picker-toolbar">
+                <button type="button" class="picker-tool-btn" id="btn-select-all">Select all</button>
+                <button type="button" class="picker-tool-btn" id="btn-clear-all">Clear</button>
+                <span class="picker-count" id="picker-count">0 selected</span>
+            </div>
+
+            <div class="student-checkbox-grid">
+                {% for student in students %}
+                <label class="student-checkbox-item">
+                    <input type="checkbox" name="assigned_to" value="{{ student.pk }}" class="student-cb" {% if student
+                        in form.assigned_to.value %}checked{% endif %}>
+                    <span class="student-cb-name">
+                        {{ student.get_full_name|default:student.username }}
+                        {% if student.email %}
+                        <small>{{ student.email }}</small>
+                        {% endif %}
+                    </span>
+                </label>
+                {% empty %}
+                <p class="empty">No student accounts found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Actions ──────────────────────────────────────────────────────── -->
+    <div class="pr-actions">
+        <a href="{% url 'treasurer_dashboard' %}" class="btn-cancel">Cancel</a>
+        <button type="submit" class="btn-submit">✓ Create Payment Request</button>
+    </div>
+
+</form>
+
+<script>
+    (function () {
+        const allCheckbox = document.getElementById('{{ form.assign_to_all.id_for_label }}');
+        const picker = document.getElementById('student-picker');
+        const studentCbs = document.querySelectorAll('.student-cb');
+        const countLabel = document.getElementById('picker-count');
+        const btnSelectAll = document.getElementById('btn-select-all');
+        const btnClearAll = document.getElementById('btn-clear-all');
+
+        function updateCount() {
+            const n = document.querySelectorAll('.student-cb:checked').length;
+            countLabel.textContent = n + ' selected';
+        }
+
+        function syncPicker() {
+            if (allCheckbox.checked) {
+                picker.style.display = 'none';
+            } else {
+                picker.style.display = 'block';
+                updateCount();
+            }
+        }
+
+        allCheckbox.addEventListener('change', syncPicker);
+        studentCbs.forEach(cb => cb.addEventListener('change', updateCount));
+
+        btnSelectAll.addEventListener('click', function () {
+            studentCbs.forEach(cb => cb.checked = true);
+            updateCount();
+        });
+
+        btnClearAll.addEventListener('click', function () {
+            studentCbs.forEach(cb => cb.checked = false);
+            updateCount();
+        });
+
+        // Run on page load to restore state after form validation errors
+        syncPicker();
+    })();
+</script>
+
+{% endblock %}

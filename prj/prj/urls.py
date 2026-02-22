@@ -29,6 +29,7 @@ urlpatterns = [
     path('payments/info/', views.payment_info_view, name='payment_info'),
     # Treasurer dashboard
     path('treasurer/', views.treasurer_dashboard_view, name='treasurer_dashboard'),
+    path('treasurer/payment-requests/new/', views.create_payment_request_view, name='create_payment_request'),
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

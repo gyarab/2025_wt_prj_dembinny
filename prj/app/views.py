@@ -6,6 +6,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
+from .forms import PaymentRequestForm
 from .models import BankAccount, Expense, PaymentRequest, Transaction, User
 
 
@@ -449,4 +450,49 @@ def treasurer_dashboard_view(req):
         'total_spent':          total_spent,
         'balance':              balance,
         'today':                today,
+    })
+
+
+# ── Create Payment Request ────────────────────────────────────────────────────
+
+@_treasurer_required
+def create_payment_request_view(req):
+    """
+    Treasurer-only form for creating a new PaymentRequest.
+
+    - If 'Assign to whole class' is checked, `assign_to_all` is set to True
+      and the M2M `assigned_to` list is left empty.
+    - Otherwise, exactly the selected students are stored in `assigned_to`
+      and `assign_to_all` is False.
+    """
+    if req.method == 'POST':
+        form = PaymentRequestForm(req.POST)
+        if form.is_valid():
+            payment_request = form.save(commit=False)
+            payment_request.created_by = req.user
+            payment_request.save()
+
+            # Save M2M only when targeting specific students
+            if payment_request.assign_to_all:
+                payment_request.assigned_to.clear()
+            else:
+                form.save_m2m()
+
+            messages.success(
+                req,
+                f'Payment request "{payment_request.title}" created successfully.'
+            )
+            return redirect('treasurer_dashboard')
+        else:
+            messages.error(req, 'Please fix the errors below.')
+    else:
+        form = PaymentRequestForm()
+
+    students = User.objects.filter(
+        is_active=True, is_treasurer=False
+    ).order_by('last_name', 'first_name', 'username')
+
+    return render(req, 'create_payment_request.html', {
+        'form':     form,
+        'students': students,
     })

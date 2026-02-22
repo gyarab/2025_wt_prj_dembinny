@@ -2,6 +2,15 @@
 {% block title %}Treasurer Dashboard — Class Fund Manager{% endblock %}
 
 {% block content %}
+<!-- ── TAB: Payment Requests ─────────────────────────────────────────── -->
+<div id="tab-requests" class="tab-panel">
+    <div class="section">
+        <div class="section-header-row">
+            <h2>📋 Payment Requests</h2>
+            <a href="{% url 'create_payment_request' %}" class="btn-new-request">+ New Request</a>
+        </div>
+    </div>
+</div>
 
 <!-- Page header -->
 <div class="page-header">
@@ -125,7 +134,8 @@
                         {% if pr.is_overdue %}<span class="badge badge-overdue"
                             style="margin-left:.4rem;">Overdue</span>{% endif %}
                         {% if pr.description %}
-                        <br><span style="font-size:.78rem;color:#888;">{{ pr.description|truncatechars:70 }}</span>
+                        <br><span style="font-size:.78rem;color:#888;">{{ pr.description|truncatechars:70
+                            }}</span>
                         {% endif %}
                         {% if pr.variable_symbol or pr.specific_symbol %}
                         <br><span style="font-size:.72rem;color:#aaa;">
@@ -236,7 +246,8 @@
                     <td>
                         <strong>{{ exp.title }}</strong>
                         {% if exp.description %}
-                        <br><span style="font-size:.78rem;color:#888;">{{ exp.description|truncatechars:60 }}</span>
+                        <br><span style="font-size:.78rem;color:#888;">{{ exp.description|truncatechars:60
+                            }}</span>
                         {% endif %}
                     </td>
                     <td><strong>{{ exp.amount }} CZK</strong></td>
