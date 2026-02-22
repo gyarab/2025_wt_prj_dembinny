@@ -47,6 +47,9 @@
             pending_transactions.count }}</span>{% endif %}
     </button>
     <button class="tab-btn" onclick="switchTab(event,'tab-expenses')">💸 Expenses</button>
+    <a href="{% url 'log_transaction' %}" class="btn-new-request" style="margin-left:auto;align-self:center;">
+        💳 Log Transfer
+    </a>
 </div>
 
 <!-- ── TAB: Students ─────────────────────────────────────────────────────── -->
@@ -64,6 +67,7 @@
                     <th>Amount Paid</th>
                     <th>Still Owes</th>
                     <th>Status</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -99,6 +103,12 @@
                         <span class="badge badge-warning">Confirming</span>
                         {% else %}
                         <span class="badge badge-danger">Owes money</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.missing_count > 0 or row.pending_count > 0 %}
+                        <a href="{% url 'log_transaction' %}?student={{ row.student.pk }}"
+                            class="btn-log-tx" title="Log a transfer for this student">💳</a>
                         {% endif %}
                     </td>
                 </tr>
@@ -190,14 +200,17 @@
     </div>
 </div>
 
-<!-- ── TAB: Pending Transactions ─────────────────────────────────────────── -->
+<!-- ── TAB: Pending Transactions ─────────────────────────────────────── -->
 <div id="tab-pending" class="tab-panel">
     <div class="section">
-        <h2>⏳ Transactions Awaiting Confirmation</h2>
+        <div class="section-header-row">
+            <h2>⏳ Transactions Awaiting Confirmation</h2>
+            <a href="{% url 'log_transaction' %}" class="btn-new-request">💳 Log Transfer</a>
+        </div>
         {% if pending_transactions %}
         <p style="font-size:.88rem;color:#666;margin-bottom:1rem;">
-            These students have submitted payment — confirm or reject them in the
-            <a href="/admin/app/transaction/?status__exact=pending">admin panel</a>.
+            These students have submitted payment. Click <strong>✓ Confirm</strong> to log the bank
+            transfer and mark the request as paid.
         </p>
         <div class="tx-queue">
             {% for tx in pending_transactions %}
@@ -208,16 +221,16 @@
                     · submitted {{ tx.created_at|date:"d.m.Y" }}
                     {% if tx.note %} · <em>{{ tx.note|truncatechars:60 }}</em>{% endif %}
                 </div>
-                <div class="tx-amount">{{ tx.amount }}<br><small
-                        style="font-size:.6em;font-weight:400;color:#888;">CZK</small></div>
+                <div class="tx-amount">{{ tx.amount }}<br>
+                    <small style="font-size:.6em;font-weight:400;color:#888;">CZK</small>
+                </div>
+                <div class="tx-actions">
+                    <a href="{% url 'log_transaction_prefill' pr_id=tx.payment_request.pk student_id=tx.student.pk %}"
+                        class="btn-confirm-tx">✓ Confirm</a>
+                </div>
             </div>
             {% endfor %}
         </div>
-        <p style="margin-top:1rem;font-size:.85rem;">
-            <a href="/admin/app/transaction/?status__exact=pending" style="color:#1a1a2e;font-weight:600;">
-                Open in admin panel →
-            </a>
-        </p>
         {% else %}
         <p class="empty">✅ No transactions waiting for review.</p>
         {% endif %}

@@ -6,7 +6,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .forms import PaymentRequestForm
+from .forms import LogTransactionForm, PaymentRequestForm
 from .models import BankAccount, Expense, PaymentRequest, Transaction, User
 
 
@@ -502,3 +502,168 @@ def create_payment_request_view(req):
         'form':     form,
         'students': students,
     })
+
+
+# ── Log Bank Transfer (create confirmed Transaction) ─────────────────────────
+
+def _unconfirmed_requests_for_student(student):
+    """
+    Return a queryset of PaymentRequests that `student` is assigned to but has
+    NOT yet had a CONFIRMED transaction for.  Used to populate the payment
+    request dropdown on the log-transaction form.
+    """
+    confirmed_ids = Transaction.objects.filter(
+        student=student,
+        status=Transaction.Status.CONFIRMED,
+    ).values_list('payment_request_id', flat=True)
+
+    return PaymentRequest.objects.filter(
+        Q(assign_to_all=True) | Q(assigned_to=student)
+    ).exclude(id__in=confirmed_ids).order_by('title')
+
+
+@_treasurer_required
+def log_transaction_view(req, pr_id=None, student_id=None):
+    """
+    Treasurer-only form for manually logging an incoming bank transfer.
+
+    Supports two entry points:
+      • /treasurer/transactions/log/                          — blank form
+      • /treasurer/transactions/log/<pr_id>/<student_id>/    — pre-filled shortcut
+        (e.g. clicking "✓ Confirm" on a pending transaction row)
+
+    On POST the Transaction is created with status=CONFIRMED immediately and
+    any existing PENDING transaction for the same (student, request) pair is
+    deleted (it has been superseded by this confirmed record).
+    """
+    import json
+
+    students = User.objects.filter(
+        is_active=True, is_treasurer=False
+    ).order_by('last_name', 'first_name', 'username')
+
+    # Build a JSON map  { student_pk: [ {id, title, amount}, … ] }
+    # so the JS can update the payment-request dropdown without a round-trip.
+    requests_by_student = {}
+    for student in students:
+        qs = _unconfirmed_requests_for_student(student)
+        requests_by_student[str(student.pk)] = [
+            {'id': pr.id, 'title': str(pr), 'amount': str(pr.amount)}
+            for pr in qs
+        ]
+
+    # Determine initial values when coming from a pre-fill shortcut
+    initial = {}
+    pre_student = None
+    if student_id:
+        pre_student = User.objects.filter(pk=student_id, is_active=True, is_treasurer=False).first()
+        if pre_student:
+            initial['student'] = pre_student
+    # Also support ?student=<pk> query param (from the students table icon)
+    elif req.method == 'GET' and req.GET.get('student'):
+        try:
+            pre_student = User.objects.get(pk=int(req.GET['student']), is_active=True, is_treasurer=False)
+            initial['student'] = pre_student
+        except (User.DoesNotExist, ValueError):
+            pass
+    if pr_id and pre_student:
+        pr_qs = _unconfirmed_requests_for_student(pre_student)
+        pre_pr = pr_qs.filter(pk=pr_id).first()
+        if pre_pr:
+            initial['payment_request'] = pre_pr
+            initial['amount']          = pre_pr.amount
+
+    # Also handle confirming an existing pending transaction
+    pending_tx = None
+    if pr_id and student_id:
+        pending_tx = Transaction.objects.filter(
+            payment_request_id=pr_id,
+            student_id=student_id,
+            status=Transaction.Status.PENDING,
+        ).first()
+        if pending_tx:
+            initial.setdefault('amount', pending_tx.amount)
+            initial.setdefault('note',   pending_tx.note)
+
+    if req.method == 'POST':
+        # Restrict payment_request choices to the posted student's unconfirmed set
+        posted_student_id = req.POST.get('student')
+        pr_qs = PaymentRequest.objects.none()
+        if posted_student_id:
+            try:
+                posted_student = User.objects.get(pk=posted_student_id)
+                pr_qs = _unconfirmed_requests_for_student(posted_student)
+                # Also include already-confirmed requests so validation message is clear
+                pr_qs = PaymentRequest.objects.filter(
+                    Q(assign_to_all=True) | Q(assigned_to=posted_student)
+                )
+            except User.DoesNotExist:
+                pr_qs = PaymentRequest.objects.all()
+
+        form = LogTransactionForm(req.POST, pr_queryset=pr_qs)
+        if form.is_valid():
+            cd      = form.cleaned_data
+            student = cd['student']
+            pr      = cd['payment_request']
+            now     = timezone.now()
+
+            # Remove any pending transaction for this (student, request) pair —
+            # the treasurer is now logging the confirmed bank transfer directly.
+            Transaction.objects.filter(
+                student=student,
+                payment_request=pr,
+                status=Transaction.Status.PENDING,
+            ).delete()
+
+            Transaction.objects.create(
+                student         = student,
+                payment_request = pr,
+                amount          = cd['amount'],
+                status          = Transaction.Status.CONFIRMED,
+                note            = cd.get('note', ''),
+                paid_at         = cd['paid_at'],
+                confirmed_at    = now,
+            )
+
+            messages.success(
+                req,
+                f'✅ Transfer logged: {student.get_full_name() or student.username} '
+                f'→ "{pr.title}" ({cd["amount"]} CZK) marked as Confirmed.'
+            )
+            return redirect('treasurer_dashboard')
+        else:
+            messages.error(req, 'Please fix the errors below.')
+    else:
+        pr_qs = PaymentRequest.objects.all()
+        if pre_student:
+            pr_qs = PaymentRequest.objects.filter(
+                Q(assign_to_all=True) | Q(assigned_to=pre_student)
+            )
+        form = LogTransactionForm(initial=initial, pr_queryset=pr_qs)
+
+    return render(req, 'log_transaction.html', {
+        'form':                  form,
+        'students':              students,
+        'requests_by_student':   json.dumps(requests_by_student),
+        'pending_tx':            pending_tx,
+    })
+
+
+@_treasurer_required
+def student_requests_json(req, student_id):
+    """
+    AJAX helper: returns JSON list of unconfirmed PaymentRequests for one student.
+    Used by the JS on the log-transaction form to refresh the dropdown.
+    """
+    import json
+    from django.http import JsonResponse
+
+    student = User.objects.filter(pk=student_id, is_active=True, is_treasurer=False).first()
+    if not student:
+        return JsonResponse([], safe=False)
+
+    data = [
+        {'id': pr.id, 'title': str(pr), 'amount': str(pr.amount)}
+        for pr in _unconfirmed_requests_for_student(student)
+    ]
+    return JsonResponse(data, safe=False)

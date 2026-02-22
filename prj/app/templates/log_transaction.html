@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block title %}Log Bank Transfer — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>💳 Log Bank Transfer</h1>
+    <a href="{% url 'treasurer_dashboard' %}">← Back to dashboard</a>
+</div>
+
+{% if pending_tx %}
+<div class="pending-tx-banner">
+    <span class="ptb-icon">⏳</span>
+    <div class="ptb-body">
+        <strong>Confirming a pending submission</strong>
+        <span>
+            {{ pending_tx.student.get_full_name|default:pending_tx.student.username }} submitted this
+            payment on {{ pending_tx.created_at|date:"d.m.Y" }}.
+            Logging it here will remove the pending record and mark it as <strong>Confirmed</strong>.
+        </span>
+    </div>
+</div>
+{% endif %}
+
+{% if form.non_field_errors %}
+<div class="pr-form-errors">
+    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+</div>
+{% endif %}
+
+<form method="post" class="pr-form" id="log-tx-form">
+    {% csrf_token %}
+
+    <!-- ── Who paid? ────────────────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>👤 Who Made the Transfer?</h2>
+
+        <div class="pr-field {% if form.student.errors %}has-error{% endif %}">
+            <label for="{{ form.student.id_for_label }}">
+                {{ form.student.label }}<span class="required">*</span>
+            </label>
+            <select name="student" id="{{ form.student.id_for_label }}" class="pr-select">
+                <option value="">— select student —</option>
+                {% for student in students %}
+                <option value="{{ student.pk }}"
+                    {% if form.student.value|stringformat:"s" == student.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ student.get_full_name|default:student.username }}
+                    {% if student.email %}({{ student.email }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+            {% if form.student.errors %}
+            <ul class="field-errors">{% for e in form.student.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── Which payment request? ───────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>📋 Which Payment Request?</h2>
+
+        <div class="pr-field {% if form.payment_request.errors %}has-error{% endif %}">
+            <label for="{{ form.payment_request.id_for_label }}">
+                {{ form.payment_request.label }}<span class="required">*</span>
+            </label>
+            <select name="payment_request" id="{{ form.payment_request.id_for_label }}" class="pr-select"
+                {% if not form.student.value %}disabled{% endif %}>
+                <option value="">— select payment request —</option>
+                {% for pr in form.payment_request.field.queryset %}
+                <option value="{{ pr.pk }}"
+                    data-amount="{{ pr.amount }}"
+                    {% if form.payment_request.value|stringformat:"s" == pr.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ pr }}
+                </option>
+                {% endfor %}
+            </select>
+            {% if form.payment_request.help_text %}
+            <p class="help-text">{{ form.payment_request.help_text }}</p>
+            {% endif %}
+            {% if form.payment_request.errors %}
+            <ul class="field-errors">{% for e in form.payment_request.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── Transfer details ─────────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>💰 Transfer Details</h2>
+
+        <div class="pr-row">
+            <div class="pr-field {% if form.amount.errors %}has-error{% endif %}">
+                <label for="{{ form.amount.id_for_label }}">
+                    {{ form.amount.label }}<span class="required">*</span>
+                </label>
+                {{ form.amount }}
+                {% if form.amount.help_text %}<p class="help-text">{{ form.amount.help_text }}</p>{% endif %}
+                {% if form.amount.errors %}
+                <ul class="field-errors">{% for e in form.amount.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+
+            <div class="pr-field {% if form.paid_at.errors %}has-error{% endif %}">
+                <label for="{{ form.paid_at.id_for_label }}">
+                    {{ form.paid_at.label }}<span class="required">*</span>
+                </label>
+                {{ form.paid_at }}
+                {% if form.paid_at.help_text %}<p class="help-text">{{ form.paid_at.help_text }}</p>{% endif %}
+                {% if form.paid_at.errors %}
+                <ul class="field-errors">{% for e in form.paid_at.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="pr-field {% if form.note.errors %}has-error{% endif %}" style="margin-top:.9rem;">
+            <label for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
+            {{ form.note }}
+            {% if form.note.errors %}
+            <ul class="field-errors">{% for e in form.note.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── Summary preview ──────────────────────────────────────────────── -->
+    <div class="pr-card tx-preview" id="tx-preview" style="display:none;">
+        <h2>🔍 Summary</h2>
+        <div class="tx-preview-row">
+            <span class="tx-preview-label">Student</span>
+            <span class="tx-preview-value" id="prev-student">—</span>
+        </div>
+        <div class="tx-preview-row">
+            <span class="tx-preview-label">Payment Request</span>
+            <span class="tx-preview-value" id="prev-request">—</span>
+        </div>
+        <div class="tx-preview-row">
+            <span class="tx-preview-label">Amount</span>
+            <span class="tx-preview-value" id="prev-amount">—</span>
+        </div>
+        <div class="tx-preview-row">
+            <span class="tx-preview-label">Status after save</span>
+            <span class="tx-preview-value"><span class="badge badge-success">✅ Confirmed</span></span>
+        </div>
+    </div>
+
+    <!-- ── Actions ──────────────────────────────────────────────────────── -->
+    <div class="pr-actions">
+        <a href="{% url 'treasurer_dashboard' %}" class="btn-cancel">Cancel</a>
+        <button type="submit" class="btn-submit">✓ Log as Confirmed</button>
+    </div>
+</form>
+
+<!-- Embed requests-by-student data for JS -->
+<script>
+(function () {
+    const REQUESTS_BY_STUDENT = {{ requests_by_student|safe }};
+    const API_BASE = "{% url 'student_requests_json' student_id=0 %}".replace('/0/', '/');
+
+    const studentSel  = document.getElementById('{{ form.student.id_for_label }}');
+    const prSel       = document.getElementById('{{ form.payment_request.id_for_label }}');
+    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+    const preview     = document.getElementById('tx-preview');
+    const prevStudent = document.getElementById('prev-student');
+    const prevRequest = document.getElementById('prev-request');
+    const prevAmount  = document.getElementById('prev-amount');
+
+    // Pre-selected values from server (pre-fill / validation re-render)
+    const preSelectedPR     = "{{ form.payment_request.value|default:'' }}";
+    const preSelectedAmount = "{{ form.amount.value|default:'' }}";
+
+    function populatePR(list, keepValue) {
+        const current = keepValue || prSel.value;
+        prSel.innerHTML = '<option value="">— select payment request —</option>';
+        list.forEach(function (pr) {
+            const opt = document.createElement('option');
+            opt.value       = pr.id;
+            opt.textContent = pr.title;
+            opt.dataset.amount = pr.amount;
+            if (String(pr.id) === String(current)) {
+                opt.selected = true;
+            }
+            prSel.appendChild(opt);
+        });
+        prSel.disabled = list.length === 0;
+        syncAmount();
+        updatePreview();
+    }
+
+    function syncAmount() {
+        const opt = prSel.options[prSel.selectedIndex];
+        if (opt && opt.dataset.amount && !amountInput.dataset.userEdited) {
+            amountInput.value = opt.dataset.amount;
+        }
+    }
+
+    function updatePreview() {
+        const sOpt = studentSel.options[studentSel.selectedIndex];
+        const pOpt = prSel.options[prSel.selectedIndex];
+        if (sOpt && sOpt.value && pOpt && pOpt.value) {
+            prevStudent.textContent = sOpt.text.trim();
+            prevRequest.textContent = pOpt.text.trim();
+            prevAmount.textContent  = (amountInput.value || '—') + ' CZK';
+            preview.style.display   = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    // When the student changes, reload the PR dropdown
+    studentSel.addEventListener('change', function () {
+        const sid = this.value;
+        if (!sid) {
+            prSel.innerHTML = '<option value="">— select payment request —</option>';
+            prSel.disabled  = true;
+            preview.style.display = 'none';
+            return;
+        }
+        // Use embedded data first (fast), fall back to fetch
+        const list = REQUESTS_BY_STUDENT[sid];
+        if (list !== undefined) {
+            populatePR(list, null);
+        } else {
+            fetch(API_BASE + sid + '/')
+                .then(r => r.json())
+                .then(data => populatePR(data, null))
+                .catch(() => populatePR([], null));
+        }
+        updatePreview();
+    });
+
+    prSel.addEventListener('change', function () {
+        amountInput.dataset.userEdited = '';   // reset override flag on PR change
+        syncAmount();
+        updatePreview();
+    });
+
+    amountInput.addEventListener('input', function () {
+        this.dataset.userEdited = '1';
+        updatePreview();
+    });
+
+    // Trigger on page-load for pre-filled forms
+    if (studentSel.value) {
+        const list = REQUESTS_BY_STUDENT[studentSel.value];
+        if (list !== undefined) {
+            populatePR(list, preSelectedPR);
+            if (preSelectedAmount) {
+                amountInput.value = preSelectedAmount;
+                amountInput.dataset.userEdited = '1';
+            }
+        }
+        updatePreview();
+    }
+})();
+</script>
+
+{% endblock %}

@@ -30,6 +30,9 @@ urlpatterns = [
     # Treasurer dashboard
     path('treasurer/', views.treasurer_dashboard_view, name='treasurer_dashboard'),
     path('treasurer/payment-requests/new/', views.create_payment_request_view, name='create_payment_request'),
+    path('treasurer/transactions/log/', views.log_transaction_view, name='log_transaction'),
+    path('treasurer/transactions/log/<int:pr_id>/<int:student_id>/', views.log_transaction_view, name='log_transaction_prefill'),
+    path('treasurer/api/student-requests/<int:student_id>/', views.student_requests_json, name='student_requests_json'),
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

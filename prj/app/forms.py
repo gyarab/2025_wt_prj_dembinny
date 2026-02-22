@@ -1,7 +1,8 @@
 from django import forms
+from django.db.models import Q
 from django.utils import timezone
 
-from .models import PaymentRequest, User
+from .models import PaymentRequest, Transaction, User
 
 
 class PaymentRequestForm(forms.ModelForm):
@@ -74,5 +75,95 @@ class PaymentRequestForm(forms.ModelForm):
             raise forms.ValidationError(
                 "Please either tick 'Assign to whole class' or select at least one student."
             )
+
+        return cleaned
+
+
+class LogTransactionForm(forms.Form):
+    """
+    Treasurer form to manually log an incoming bank transfer.
+
+    Flow:
+      1. Select the student who sent the money.
+      2. The JS on the page (and the view's AJAX endpoint) filters the
+         payment_request dropdown to only the requests that student still owes.
+      3. Amount pre-fills from the selected request but can be overridden.
+      4. On save the Transaction is created with status=CONFIRMED immediately
+         (the treasurer has already verified the bank transfer).
+    """
+
+    student = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_active=True, is_treasurer=False)
+                             .order_by('last_name', 'first_name', 'username'),
+        label='Student',
+        empty_label='— select student —',
+    )
+
+    payment_request = forms.ModelChoiceField(
+        queryset=PaymentRequest.objects.all(),
+        label='Payment Request',
+        empty_label='— select payment request —',
+        help_text='Only requests the student still owes are listed.',
+    )
+
+    amount = forms.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        min_value=0,
+        label='Amount received (CZK)',
+        widget=forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'placeholder': '0.00'}),
+        help_text='Pre-filled from the payment request; adjust if the student paid a different amount.',
+    )
+
+    paid_at = forms.DateTimeField(
+        label='Transfer date & time',
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+        input_formats=['%Y-%m-%dT%H:%M'],
+        help_text='When did the money arrive in the bank account?',
+    )
+
+    note = forms.CharField(
+        required=False,
+        label='Note (optional)',
+        widget=forms.Textarea(attrs={'rows': 2, 'placeholder': 'Bank reference, VS/SS, any remark…'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        # Allow the view to pre-restrict the payment_request queryset
+        pr_queryset = kwargs.pop('pr_queryset', None)
+        super().__init__(*args, **kwargs)
+        if pr_queryset is not None:
+            self.fields['payment_request'].queryset = pr_queryset
+        # Default paid_at to now (formatted for datetime-local input)
+        if not self.data.get('paid_at'):
+            self.fields['paid_at'].initial = timezone.localtime().strftime('%Y-%m-%dT%H:%M')
+
+    def clean(self):
+        cleaned = super().clean()
+        student         = cleaned.get('student')
+        payment_request = cleaned.get('payment_request')
+
+        if student and payment_request:
+            # Guard: student must actually be assigned to this request
+            assigned = PaymentRequest.objects.filter(
+                Q(assign_to_all=True) | Q(assigned_to=student),
+                id=payment_request.id,
+            ).exists()
+            if not assigned:
+                raise forms.ValidationError(
+                    f'{student} is not assigned to "{payment_request.title}".'
+                )
+
+            # Prevent duplicate confirmed transactions for the same (student, request)
+            already_confirmed = Transaction.objects.filter(
+                student=student,
+                payment_request=payment_request,
+                status=Transaction.Status.CONFIRMED,
+            ).exists()
+            if already_confirmed:
+                raise forms.ValidationError(
+                    f'A confirmed transaction already exists for {student} '
+                    f'→ "{payment_request.title}". No duplicate created.'
+                )
 
         return cleaned
