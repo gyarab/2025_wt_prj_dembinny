@@ -3,94 +3,105 @@
 
 {% block content %}
 
-<div class="page-header">
-    <h1>🏦 How to Pay</h1>
-    <a href="{% url 'dashboard' %}">← Back to Dashboard</a>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 fw-bold mb-0">How to Pay</h1>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
 </div>
 
-<div class="payment-layout">
-
-    {% if account %}
+{% if account %}
+<div class="row g-4">
 
     <!-- Account details -->
-    <div class="account-card">
-        <h2>Class Bank Account</h2>
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">Class Bank Account</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Account Holder</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ account.owner_name }}</dd>
 
-        <div class="detail-row">
-            <span class="field-label">Account Holder</span>
-            <span class="field-value">{{ account.owner_name }}</span>
-        </div>
+                    <dt class="col-sm-4 text-muted">Account Number</dt>
+                    <dd class="col-sm-8">
+                        <span id="account-number" class="fw-semibold me-2">{{ account.account_number }}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyField('account-number', this)">Copy</button>
+                    </dd>
 
-        <div class="detail-row">
-            <span class="field-label">Account Number</span>
-            <span class="field-value" id="account-number">{{ account.account_number }}</span>
-            <button class="copy-btn" onclick="copyField('account-number', this)">Copy</button>
-        </div>
+                    {% if account.iban %}
+                    <dt class="col-sm-4 text-muted">IBAN</dt>
+                    <dd class="col-sm-8">
+                        <span id="iban" class="fw-semibold me-2">{{ account.iban }}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyField('iban', this)">Copy</button>
+                    </dd>
+                    {% endif %}
 
-        {% if account.iban %}
-        <div class="detail-row">
-            <span class="field-label">IBAN</span>
-            <span class="field-value" id="iban">{{ account.iban }}</span>
-            <button class="copy-btn" onclick="copyField('iban', this)">Copy</button>
-        </div>
-        {% endif %}
+                    {% if account.bank_name %}
+                    <dt class="col-sm-4 text-muted">Bank</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ account.bank_name }}</dd>
+                    {% endif %}
+                </dl>
 
-        {% if account.bank_name %}
-        <div class="detail-row">
-            <span class="field-label">Bank</span>
-            <span class="field-value">{{ account.bank_name }}</span>
+                {% if account.note %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <strong>Note from the treasurer:</strong><br>
+                    {{ account.note|linebreaksbr }}
+                </div>
+                {% endif %}
+            </div>
         </div>
-        {% endif %}
-
-        {% if account.note %}
-        <div class="note-box">
-            📌 <strong>Note from the treasurer:</strong><br>
-            {{ account.note|linebreaksbr }}
-        </div>
-        {% endif %}
     </div>
 
     <!-- QR code -->
-    <div class="qr-card">
-        <h3>📱 Scan to Pay</h3>
-        {% if qr_base64 %}
-        <img src="data:image/png;base64,{{ qr_base64 }}" alt="Payment QR code">
-        <p>Open your banking app and scan<br>this Czech Payment QR (SPD).</p>
-        {% else %}
-        <div
-            style="width:200px;height:200px;background:#f5f7fa;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:.85rem;text-align:center;padding:1rem;">
-            QR code not available
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 h-100 text-center">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">Scan to Pay</h5>
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
+                {% if qr_base64 %}
+                <img src="data:image/png;base64,{{ qr_base64 }}" alt="Payment QR code" class="img-fluid mb-3" style="max-width:220px;">
+                <p class="text-muted small mb-0">Open your banking app and scan<br>this Czech Payment QR (SPD).</p>
+                {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted small p-4 mb-3" style="width:200px;height:200px;">
+                    QR code not available
+                </div>
+                <p class="text-muted small mb-0">Add an IBAN or account number<br>in the admin panel to enable QR.</p>
+                {% endif %}
+            </div>
         </div>
-        <p>Add an IBAN or account number<br>in the admin panel to enable QR.</p>
-        {% endif %}
     </div>
-
-    {% else %}
-
-    <!-- No account configured yet -->
-    <div class="placeholder-banner">
-        <div class="icon">🏗️</div>
-        <h2>Payment details not yet configured</h2>
-        <p>The class treasurer hasn't set up the bank account details yet. Check back soon!</p>
-        {% if user.is_treasurer %}
-        <a href="/admin/app/bankaccount/add/"
-            style="display:inline-block;margin-top:1.25rem;background:#1a1a2e;color:#e2b96f;padding:.6rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:600;">
-            Add Bank Account →
-        </a>
-        {% endif %}
-    </div>
-
-    {% endif %}
 
 </div>
+
+{% else %}
+
+<!-- No account configured yet -->
+<div class="card shadow-sm border-0">
+    <div class="card-body text-center py-5">
+        <div class="fs-1 mb-3">Under Construction</div>
+        <h2 class="h4 fw-bold mb-2">Payment details not yet configured</h2>
+        <p class="text-muted">The class treasurer has not set up the bank account details yet. Check back soon!</p>
+        {% if user.is_treasurer %}
+        <a href="/admin/app/bankaccount/add/" class="btn btn-cfm mt-2">Add Bank Account</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endif %}
 
 <script>
     function copyField(id, btn) {
         const text = document.getElementById(id).textContent.trim();
         navigator.clipboard.writeText(text).then(() => {
-            btn.textContent = '✓ Copied';
-            btn.classList.add('copied');
-            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+            btn.textContent = 'Copied!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            setTimeout(() => {
+                btn.textContent = 'Copy';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
         });
     }
 </script>

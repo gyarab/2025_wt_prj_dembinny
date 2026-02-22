@@ -38,12 +38,12 @@ class PaymentRequestForm(forms.ModelForm):
             'assigned_to',
         ]
         widgets = {
-            'title':           forms.TextInput(attrs={'placeholder': 'e.g. School trip deposit'}),
-            'description':     forms.Textarea(attrs={'rows': 3, 'placeholder': 'Optional details…'}),
-            'amount':          forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'placeholder': '0.00'}),
-            'due_date':        forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'variable_symbol': forms.TextInput(attrs={'placeholder': 'Up to 10 digits'}),
-            'specific_symbol': forms.TextInput(attrs={'placeholder': 'Up to 10 digits'}),
+            'title':           forms.TextInput(attrs={'placeholder': 'e.g. School trip deposit', 'class': 'form-control'}),
+            'description':     forms.Textarea(attrs={'rows': 3, 'placeholder': 'Optional details…', 'class': 'form-control'}),
+            'amount':          forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'placeholder': '0.00', 'class': 'form-control'}),
+            'due_date':        forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d'),
+            'variable_symbol': forms.TextInput(attrs={'placeholder': 'Up to 10 digits', 'class': 'form-control'}),
+            'specific_symbol': forms.TextInput(attrs={'placeholder': 'Up to 10 digits', 'class': 'form-control'}),
         }
         labels = {
             'title':           'Title',
@@ -200,20 +200,20 @@ class ExpenseForm(forms.ModelForm):
         widgets = {
             'title':       forms.TextInput(attrs={
                 'placeholder': 'e.g. Bought pizza for class party',
-                'class': 'form-control-input',
+                'class': 'form-control',
             }),
             'description': forms.Textarea(attrs={
                 'rows': 3,
                 'placeholder': 'Optional details (receipt number, shop, occasion…)',
-                'class': 'form-control-input',
+                'class': 'form-control',
             }),
             'amount':      forms.NumberInput(attrs={
                 'step': '0.01', 'min': '0', 'placeholder': '0.00',
-                'class': 'form-control-input',
+                'class': 'form-control',
             }),
-            'category':    forms.Select(attrs={'class': 'form-control-input'}),
-            'spent_at':    forms.DateInput(attrs={'type': 'date', 'class': 'form-control-input'}, format='%Y-%m-%d'),
-            'is_published': forms.CheckboxInput(),
+            'category':    forms.Select(attrs={'class': 'form-select'}),
+            'spent_at':    forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d'),
+            'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         labels = {
             'title':        'What was bought / spent on?',
