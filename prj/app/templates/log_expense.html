@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}{% if instance %}Edit Expense{% else %}Log Expense{% endif %} — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>💸 {% if instance %}Edit Expense{% else %}Log New Expense{% endif %}</h1>
+    <a href="{% url 'treasurer_dashboard' %}">← Back to dashboard</a>
+</div>
+
+{% if form.non_field_errors %}
+<div class="pr-form-errors">
+    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+</div>
+{% endif %}
+
+<form method="post" class="pr-form" id="log-expense-form">
+    {% csrf_token %}
+
+    <!-- ── What was bought? ─────────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>🛍 What was spent on?</h2>
+
+        <div class="pr-field {% if form.title.errors %}has-error{% endif %}">
+            <label for="{{ form.title.id_for_label }}">
+                {{ form.title.label }}<span class="required">*</span>
+            </label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <ul class="field-errors">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+
+        <div class="pr-field {% if form.description.errors %}has-error{% endif %}">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <ul class="field-errors">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── Amount & Category ────────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>💰 Amount & Category</h2>
+
+        <div class="pr-row">
+            <div class="pr-field {% if form.amount.errors %}has-error{% endif %}">
+                <label for="{{ form.amount.id_for_label }}">
+                    {{ form.amount.label }}<span class="required">*</span>
+                </label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                <ul class="field-errors">{% for e in form.amount.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+
+            <div class="pr-field {% if form.category.errors %}has-error{% endif %}">
+                <label for="{{ form.category.id_for_label }}">
+                    {{ form.category.label }}<span class="required">*</span>
+                </label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <ul class="field-errors">{% for e in form.category.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Date & Visibility ────────────────────────────────────────────── -->
+    <div class="pr-card">
+        <h2>📅 Date & Visibility</h2>
+
+        <div class="pr-row">
+            <div class="pr-field {% if form.spent_at.errors %}has-error{% endif %}">
+                <label for="{{ form.spent_at.id_for_label }}">
+                    {{ form.spent_at.label }}<span class="required">*</span>
+                </label>
+                {{ form.spent_at }}
+                {% if form.spent_at.errors %}
+                <ul class="field-errors">{% for e in form.spent_at.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+
+            <div class="pr-field" style="display:flex;align-items:center;gap:.6rem;padding-top:1.6rem;">
+                {{ form.is_published }}
+                <label for="{{ form.is_published.id_for_label }}" style="margin:0;font-weight:500;cursor:pointer;">
+                    {{ form.is_published.label }}
+                </label>
+                {% if form.is_published.help_text %}
+                <p class="help-text" style="margin:0;">{{ form.is_published.help_text }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Actions ──────────────────────────────────────────────────────── -->
+    <div class="pr-card pr-actions">
+        <button type="submit" class="btn-submit">
+            {% if instance %}💾 Save Changes{% else %}💸 Log Expense{% endif %}
+        </button>
+        <a href="{% url 'treasurer_dashboard' %}" class="btn-cancel">Cancel</a>
+
+        {% if instance %}
+        <form method="post" action="{% url 'delete_expense' instance.pk %}" style="display:inline;margin-left:auto;"
+            onsubmit="return confirm('Delete this expense permanently?');">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger">🗑 Delete</button>
+        </form>
+        {% endif %}
+    </div>
+
+</form>
+
+{% endblock %}

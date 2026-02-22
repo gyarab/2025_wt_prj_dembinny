@@ -20,6 +20,7 @@
         {% if user.is_treasurer %}
         <a href="{% url 'treasurer_dashboard' %}">⚙ Treasurer</a>
         {% endif %}
+        <a href="{% url 'budget' %}">📊 Budget</a>
         <a href="{% url 'payment_info' %}">How to Pay</a>
         <span class="username">
             {{ user.get_full_name|default:user.username }}{% if user.is_treasurer %} (Treasurer){% endif %}

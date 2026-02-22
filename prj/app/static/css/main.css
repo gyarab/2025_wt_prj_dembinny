@@ -1571,3 +1571,217 @@ main {
 .fund-breakdown span {
     white-space: nowrap;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Budget / Transparency page
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Summary cards ── */
+.budget-summary {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.budget-card {
+    flex: 1 1 200px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.1rem 1.4rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.bc-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.bc-label {
+    font-size: .78rem;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: .15rem;
+}
+
+.bc-value {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    line-height: 1.1;
+}
+
+.bc-value.bc-positive { color: #1a7a4a; }
+.bc-value.bc-negative { color: #dc3545; }
+
+.bc-sub {
+    font-size: .72rem;
+    color: #aaa;
+    margin-top: .25rem;
+}
+
+/* ── Category breakdown bar ── */
+.cat-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    margin-top: .75rem;
+}
+
+.cat-label {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin-bottom: .3rem;
+}
+
+.cat-name  { font-weight: 600; font-size: .92rem; }
+.cat-pct   { color: #888; font-size: .82rem; }
+.cat-amount { margin-left: auto; font-weight: 700; font-size: .88rem; color: #1a1a2e; }
+
+.cat-bar-wrap {
+    height: 10px;
+    background: #eef0f4;
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.cat-bar {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .4s ease;
+    background: #1a1a2e;
+}
+
+/* Per-category colours */
+.cat-trip       { background: #3b82f6; }
+.cat-supplies   { background: #8b5cf6; }
+.cat-food       { background: #f59e0b; }
+.cat-decoration { background: #ec4899; }
+.cat-donation   { background: #10b981; }
+.cat-other      { background: #6b7280; }
+
+/* ── Timeline ── */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: .5rem;
+}
+
+.tl-month-block {
+    margin-bottom: 2rem;
+}
+
+.tl-month-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .4rem .75rem;
+    background: #1a1a2e;
+    color: #e2b96f;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: .92rem;
+    margin-bottom: 1rem;
+}
+
+.tl-month-total {
+    font-size: .88rem;
+    opacity: .85;
+}
+
+.tl-entry {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding-left: .5rem;
+    margin-bottom: .85rem;
+    position: relative;
+}
+
+/* Vertical connector line between dots */
+.tl-month-block .tl-entry:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 1.05rem;
+    top: 1.4rem;
+    bottom: -0.85rem;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.tl-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: .35rem;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px currentColor;
+}
+
+/* Dot colours mirror bar colours */
+.cat-dot-trip       { background: #3b82f6; color: #3b82f6; }
+.cat-dot-supplies   { background: #8b5cf6; color: #8b5cf6; }
+.cat-dot-food       { background: #f59e0b; color: #f59e0b; }
+.cat-dot-decoration { background: #ec4899; color: #ec4899; }
+.cat-dot-donation   { background: #10b981; color: #10b981; }
+.cat-dot-other      { background: #6b7280; color: #6b7280; }
+
+.tl-card {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+.tl-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+.tl-title  { font-size: .97rem; }
+.tl-amount { font-weight: 800; font-size: 1rem; color: #1a1a2e; white-space: nowrap; }
+
+.tl-meta {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-top: .3rem;
+    flex-wrap: wrap;
+}
+
+.tl-date { font-size: .78rem; color: #aaa; }
+.tl-cat  { font-size: .72rem !important; }
+
+.tl-desc {
+    margin-top: .5rem;
+    font-size: .85rem;
+    color: #555;
+    border-top: 1px solid #f0f0f0;
+    padding-top: .45rem;
+}
+
+/* ── Empty state ── */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #888;
+}
+
+.empty-state .empty-icon {
+    font-size: 3rem;
+    margin-bottom: .75rem;
+}

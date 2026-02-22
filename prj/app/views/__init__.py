@@ -15,6 +15,7 @@ from .auth import (
 
 # Student-facing views
 from .student import (
+    budget_view,
     dashboard_view,
     payment_info_view,
     pending_payments_view,
@@ -45,6 +46,7 @@ __all__ = [
     "dashboard_view",
     "pending_payments_view",
     "payment_info_view",
+    "budget_view",
     # treasurer
     "treasurer_dashboard_view",
     "create_payment_request_view",

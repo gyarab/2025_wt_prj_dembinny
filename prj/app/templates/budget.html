@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Class Budget — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>📊 Class Budget</h1>
+    <span style="font-size:.9rem;color:#888;">How we spend the class fund — full transparency</span>
+</div>
+
+<!-- ── Summary cards ──────────────────────────────────────────────────────── -->
+<div class="budget-summary">
+    <div class="budget-card">
+        <div class="bc-icon">💸</div>
+        <div class="bc-body">
+            <div class="bc-label">Total Spent</div>
+            <div class="bc-value">{{ total_spent }} CZK</div>
+        </div>
+    </div>
+    <div class="budget-card">
+        <div class="bc-icon">🏦</div>
+        <div class="bc-body">
+            <div class="bc-label">Fund Balance</div>
+            <div class="bc-value {% if fund_balance >= 0 %}bc-positive{% else %}bc-negative{% endif %}">
+                {{ fund_balance }} CZK
+            </div>
+            <div class="bc-sub">↑ {{ fund_collected }} collected &nbsp;·&nbsp; ↓ {{ fund_spent }} spent</div>
+        </div>
+    </div>
+    <div class="budget-card">
+        <div class="bc-icon">🧾</div>
+        <div class="bc-body">
+            <div class="bc-label">Total Entries</div>
+            <div class="bc-value">{{ expense_count }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Category breakdown bar ─────────────────────────────────────────────── -->
+{% if category_totals %}
+<div class="section">
+    <h2>🗃️ Spending by Category</h2>
+    <div class="cat-breakdown">
+        {% for row in category_totals %}
+        <div class="cat-row">
+            <div class="cat-label">
+                <span class="cat-name">{{ row.label }}</span>
+                <span class="cat-pct">{{ row.pct }}%</span>
+                <span class="cat-amount">{{ row.total }} CZK</span>
+            </div>
+            <div class="cat-bar-wrap">
+                <div class="cat-bar cat-{{ row.category }}" style="width:{{ row.pct }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ── Timeline ───────────────────────────────────────────────────────────── -->
+<div class="section">
+    <h2>🕐 Expense Timeline</h2>
+    {% if grouped %}
+    <div class="timeline">
+        {% for group in grouped %}
+        <div class="tl-month-block">
+            <!-- Month heading -->
+            <div class="tl-month-heading">
+                <span class="tl-month-label">
+                    {% with m=group.month y=group.year %}
+                    {% if m == 1 %}January{% elif m == 2 %}February{% elif m == 3 %}March
+                    {% elif m == 4 %}April{% elif m == 5 %}May{% elif m == 6 %}June
+                    {% elif m == 7 %}July{% elif m == 8 %}August{% elif m == 9 %}September
+                    {% elif m == 10 %}October{% elif m == 11 %}November{% else %}December{% endif %}
+                    {{ y }}
+                    {% endwith %}
+                </span>
+                <span class="tl-month-total">{{ group.subtotal }} CZK</span>
+            </div>
+
+            <!-- Entries for this month -->
+            {% for exp in group.items %}
+            <div class="tl-entry">
+                <div class="tl-dot cat-dot-{{ exp.category }}"></div>
+                <div class="tl-card">
+                    <div class="tl-card-header">
+                        <div class="tl-title-row">
+                            <strong class="tl-title">{{ exp.title }}</strong>
+                            <span class="tl-amount">{{ exp.amount }} CZK</span>
+                        </div>
+                        <div class="tl-meta">
+                            <span class="badge badge-secondary tl-cat">{{ exp.get_category_display }}</span>
+                            <span class="tl-date">{{ exp.spent_at|date:"d.m.Y" }}</span>
+                        </div>
+                    </div>
+                    {% if exp.description %}
+                    <p class="tl-desc">{{ exp.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>No expenses have been published yet.</p>
+        <p style="font-size:.88rem;color:#aaa;">Check back once the treasurer logs the first spending.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

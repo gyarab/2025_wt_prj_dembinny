@@ -2,10 +2,11 @@
 app/views/student.py
 ────────────────────
 Student-facing views: landing page, personal dashboard,
-pending-payments page, and payment-info / QR-code page.
+pending-payments page, payment-info / QR-code page, and budget timeline.
 """
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
 from django.shortcuts import redirect, render
 
 from ..models import BankAccount, Expense
@@ -87,4 +88,62 @@ def payment_info_view(req):
     return render(req, 'payment_info.html', {
         'account':   account,
         'qr_base64': qr_base64,
+    })
+
+
+# ── Budget / Transparency page ────────────────────────────────────────────────
+
+@login_required
+def budget_view(req):
+    """
+    Public (login-required) transparency page showing the full timeline of
+    published expenses, grouped by month, with running totals and category
+    breakdown — so every student can see how the class money is being spent.
+    """
+    from itertools import groupby
+    from ..models import Transaction
+
+    expenses = list(
+        Expense.objects.filter(is_published=True)
+        .select_related('recorded_by')
+        .order_by('-spent_at', '-created_at')
+    )
+
+    # Group expenses by (year, month) for the timeline
+    def month_key(e):
+        return (e.spent_at.year, e.spent_at.month)
+
+    grouped = []
+    for key, group in groupby(expenses, key=month_key):
+        items = list(group)
+        grouped.append({
+            'year':    key[0],
+            'month':   key[1],
+            'items':   items,
+            'subtotal': sum(e.amount for e in items),
+        })
+
+    # Category totals for the summary bar
+    category_totals = (
+        Expense.objects.filter(is_published=True)
+        .values('category')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')
+    )
+
+    total_spent = Expense.objects.filter(
+        is_published=True
+    ).aggregate(s=Sum('amount'))['s'] or 0
+
+    # Attach human-readable category labels
+    category_labels = dict(Expense.Category.choices)
+    for row in category_totals:
+        row['label'] = category_labels.get(row['category'], row['category'])
+        row['pct']   = round(row['total'] / total_spent * 100) if total_spent else 0
+
+    return render(req, 'budget.html', {
+        'grouped':          grouped,
+        'category_totals':  category_totals,
+        'total_spent':      total_spent,
+        'expense_count':    len(expenses),
     })
