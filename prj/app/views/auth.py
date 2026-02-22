@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 
 from .utils import add_form_control_class
@@ -34,10 +35,11 @@ def login_view(req):
 
 
 def logout_view(req):
-    """Log the current user out (POST only for CSRF safety)."""
-    if req.method == 'POST':
-        logout(req)
-        messages.info(req, 'You have been logged out.')
+    """Log the current user out — POST only (CSRF safety)."""
+    if req.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    logout(req)
+    messages.info(req, 'You have been logged out.')
     return redirect('login')
 
 
