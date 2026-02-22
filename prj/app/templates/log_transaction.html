@@ -42,8 +42,7 @@
             <select name="student" id="{{ form.student.id_for_label }}" class="pr-select">
                 <option value="">— select student —</option>
                 {% for student in students %}
-                <option value="{{ student.pk }}"
-                    {% if form.student.value|stringformat:"s" == student.pk|stringformat:"s" %}selected{% endif %}>
+                <option value="{{ student.pk }}" {% if form.student.value|stringformat:"s" == student.pk|stringformat:"s" %}selected{% endif %}>
                     {{ student.get_full_name|default:student.username }}
                     {% if student.email %}({{ student.email }}){% endif %}
                 </option>
@@ -63,13 +62,10 @@
             <label for="{{ form.payment_request.id_for_label }}">
                 {{ form.payment_request.label }}<span class="required">*</span>
             </label>
-            <select name="payment_request" id="{{ form.payment_request.id_for_label }}" class="pr-select"
-                {% if not form.student.value %}disabled{% endif %}>
+            <select name="payment_request" id="{{ form.payment_request.id_for_label }}" class="pr-select" {% if not form.student.value %}disabled{% endif %}>
                 <option value="">— select payment request —</option>
                 {% for pr in form.payment_request.field.queryset %}
-                <option value="{{ pr.pk }}"
-                    data-amount="{{ pr.amount }}"
-                    {% if form.payment_request.value|stringformat:"s" == pr.pk|stringformat:"s" %}selected{% endif %}>
+                <option value="{{ pr.pk }}" data-amount="{{ pr.amount }}" {% if form.payment_request.value|stringformat:"s" == pr.pk|stringformat:"s" %}selected{% endif %}>
                     {{ pr }}
                 </option>
                 {% endfor %}
@@ -111,6 +107,28 @@
             </div>
         </div>
 
+        <!-- Status selector -->
+        <div class="pr-field {% if form.status.errors %}has-error{% endif %}" style="margin-top:.9rem;">
+            <label for="{{ form.status.id_for_label }}">
+                {{ form.status.label }}<span class="required">*</span>
+            </label>
+            <div class="status-radio-group" id="status-radio-group">
+                {% for val, lbl in form.status.field.choices %}
+                <label class="status-radio-item status-radio-{{ val }}">
+                    <input type="radio" name="status" value="{{ val }}" {% if form.status.value == val or form.status.field.initial == val and not form.status.value %}checked{% endif %}>
+                    <span class="status-radio-icon">
+                        {% if val == 'confirmed' %}✅{% elif val == 'pending' %}⏳{% else %}❌{% endif %}
+                    </span>
+                    <span class="status-radio-label">{{ lbl }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            {% if form.status.help_text %}<p class="help-text" style="margin-top:.4rem;">{{ form.status.help_text }}</p>{% endif %}
+            {% if form.status.errors %}
+            <ul class="field-errors">{% for e in form.status.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+
         <div class="pr-field {% if form.note.errors %}has-error{% endif %}" style="margin-top:.9rem;">
             <label for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
             {{ form.note }}
@@ -137,41 +155,67 @@
         </div>
         <div class="tx-preview-row">
             <span class="tx-preview-label">Status after save</span>
-            <span class="tx-preview-value"><span class="badge badge-success">✅ Confirmed</span></span>
+            <span class="tx-preview-value" id="prev-status">
+                <span class="badge badge-success">✅ Confirmed</span>
+            </span>
         </div>
     </div>
 
     <!-- ── Actions ──────────────────────────────────────────────────────── -->
     <div class="pr-actions">
         <a href="{% url 'treasurer_dashboard' %}" class="btn-cancel">Cancel</a>
-        <button type="submit" class="btn-submit">✓ Log as Confirmed</button>
+        <button type="submit" class="btn-submit" id="submit-btn">✓ Log Transfer</button>
     </div>
 </form>
 
 <!-- Embed requests-by-student data for JS -->
 <script>
-(function () {
-    const REQUESTS_BY_STUDENT = {{ requests_by_student|safe }};
+    (function () {
+        const REQUESTS_BY_STUDENT = {{ requests_by_student | safe }};
     const API_BASE = "{% url 'student_requests_json' student_id=0 %}".replace('/0/', '/');
 
-    const studentSel  = document.getElementById('{{ form.student.id_for_label }}');
-    const prSel       = document.getElementById('{{ form.payment_request.id_for_label }}');
+    const studentSel = document.getElementById('{{ form.student.id_for_label }}');
+    const prSel = document.getElementById('{{ form.payment_request.id_for_label }}');
     const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
-    const preview     = document.getElementById('tx-preview');
+    const preview = document.getElementById('tx-preview');
     const prevStudent = document.getElementById('prev-student');
     const prevRequest = document.getElementById('prev-request');
-    const prevAmount  = document.getElementById('prev-amount');
+    const prevAmount = document.getElementById('prev-amount');
+    const prevStatus = document.getElementById('prev-status');
+    const submitBtn = document.getElementById('submit-btn');
 
     // Pre-selected values from server (pre-fill / validation re-render)
-    const preSelectedPR     = "{{ form.payment_request.value|default:'' }}";
+    const preSelectedPR = "{{ form.payment_request.value|default:'' }}";
     const preSelectedAmount = "{{ form.amount.value|default:'' }}";
+
+    const STATUS_META = {
+        confirmed: { badge: 'badge-success', icon: '✅', label: 'Confirmed', btn: '✓ Log as Confirmed' },
+        pending: { badge: 'badge-warning', icon: '⏳', label: 'Pending', btn: '⏳ Log as Pending' },
+        rejected: { badge: 'badge-danger', icon: '❌', label: 'Rejected', btn: '✗ Log as Rejected' },
+    };
+
+    function getSelectedStatus() {
+        const checked = document.querySelector('input[name="status"]:checked');
+        return checked ? checked.value : 'confirmed';
+    }
+
+    function updateStatusPreview() {
+        const val = getSelectedStatus();
+        const meta = STATUS_META[val] || STATUS_META.confirmed;
+        if (prevStatus) {
+            prevStatus.innerHTML = `<span class="badge ${meta.badge}">${meta.icon} ${meta.label}</span>`;
+        }
+        if (submitBtn) {
+            submitBtn.textContent = meta.btn;
+        }
+    }
 
     function populatePR(list, keepValue) {
         const current = keepValue || prSel.value;
         prSel.innerHTML = '<option value="">— select payment request —</option>';
         list.forEach(function (pr) {
             const opt = document.createElement('option');
-            opt.value       = pr.id;
+            opt.value = pr.id;
             opt.textContent = pr.title;
             opt.dataset.amount = pr.amount;
             if (String(pr.id) === String(current)) {
@@ -197,11 +241,12 @@
         if (sOpt && sOpt.value && pOpt && pOpt.value) {
             prevStudent.textContent = sOpt.text.trim();
             prevRequest.textContent = pOpt.text.trim();
-            prevAmount.textContent  = (amountInput.value || '—') + ' CZK';
-            preview.style.display   = 'block';
+            prevAmount.textContent = (amountInput.value || '—') + ' CZK';
+            preview.style.display = 'block';
         } else {
             preview.style.display = 'none';
         }
+        updateStatusPreview();
     }
 
     // When the student changes, reload the PR dropdown
@@ -209,7 +254,7 @@
         const sid = this.value;
         if (!sid) {
             prSel.innerHTML = '<option value="">— select payment request —</option>';
-            prSel.disabled  = true;
+            prSel.disabled = true;
             preview.style.display = 'none';
             return;
         }
@@ -237,6 +282,11 @@
         updatePreview();
     });
 
+    // React to status radio changes
+    document.querySelectorAll('input[name="status"]').forEach(function (radio) {
+        radio.addEventListener('change', updateStatusPreview);
+    });
+
     // Trigger on page-load for pre-filled forms
     if (studentSel.value) {
         const list = REQUESTS_BY_STUDENT[studentSel.value];
@@ -249,7 +299,8 @@
         }
         updatePreview();
     }
-})();
+    updateStatusPreview();
+}) ();
 </script>
 
 {% endblock %}

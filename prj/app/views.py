@@ -447,10 +447,51 @@ def treasurer_dashboard_view(req):
     # ── Recent expenses ───────────────────────────────────────────────────────
     recent_expenses = Expense.objects.order_by('-spent_at')[:8]
 
+    # ── All unconfirmed assignments (for the expanded Pending tab) ────────────
+    # Build a flat list of {student, payment_request, status} rows for every
+    # (student, request) pair where no CONFIRMED transaction exists yet.
+    # Split into two groups: student-submitted (PENDING) and not-yet-paid (missing).
+    confirmed_pairs = set(
+        Transaction.objects.filter(status=Transaction.Status.CONFIRMED)
+        .values_list('student_id', 'payment_request_id')
+    )
+    pending_pairs = {
+        (tx.student_id, tx.payment_request_id): tx
+        for tx in Transaction.objects.filter(status=Transaction.Status.PENDING)
+        .select_related('student', 'payment_request')
+    }
+
+    submitted_items = []   # student sent payment, treasurer hasn't confirmed yet
+    missing_items   = []   # no transaction at all
+
+    for pr in all_requests:
+        if pr.assign_to_all:
+            assigned_students = list(students)
+        else:
+            assigned_students = list(pr.assigned_to.filter(is_active=True, is_treasurer=False))
+
+        for student in assigned_students:
+            pair = (student.id, pr.id)
+            if pair in confirmed_pairs:
+                continue   # already paid
+            if pair in pending_pairs:
+                submitted_items.append({
+                    'student':         student,
+                    'payment_request': pr,
+                    'tx':              pending_pairs[pair],
+                })
+            else:
+                missing_items.append({
+                    'student':         student,
+                    'payment_request': pr,
+                })
+
     return render(req, 'treasurer_dashboard.html', {
         'all_requests':         all_requests,
         'student_rows':         student_rows,
         'pending_transactions': pending_transactions,
+        'submitted_items':      submitted_items,
+        'missing_items':        missing_items,
         'recent_expenses':      recent_expenses,
         'total_collected':      total_collected,
         'total_spent':          total_spent,
@@ -605,30 +646,33 @@ def log_transaction_view(req, pr_id=None, student_id=None):
             cd      = form.cleaned_data
             student = cd['student']
             pr      = cd['payment_request']
+            status  = cd['status']
             now     = timezone.now()
 
-            # Remove any pending transaction for this (student, request) pair —
-            # the treasurer is now logging the confirmed bank transfer directly.
-            Transaction.objects.filter(
-                student=student,
-                payment_request=pr,
-                status=Transaction.Status.PENDING,
-            ).delete()
+            # When logging as Confirmed, remove any earlier PENDING record for
+            # this (student, request) pair — it's been superseded.
+            if status == Transaction.Status.CONFIRMED:
+                Transaction.objects.filter(
+                    student=student,
+                    payment_request=pr,
+                    status=Transaction.Status.PENDING,
+                ).delete()
 
             Transaction.objects.create(
                 student         = student,
                 payment_request = pr,
                 amount          = cd['amount'],
-                status          = Transaction.Status.CONFIRMED,
+                status          = status,
                 note            = cd.get('note', ''),
                 paid_at         = cd['paid_at'],
-                confirmed_at    = now,
+                confirmed_at    = now if status == Transaction.Status.CONFIRMED else None,
             )
 
+            status_label = dict(Transaction.Status.choices).get(status, status)
             messages.success(
                 req,
                 f'✅ Transfer logged: {student.get_full_name() or student.username} '
-                f'→ "{pr.title}" ({cd["amount"]} CZK) marked as Confirmed.'
+                f'→ "{pr.title}" ({cd["amount"]} CZK) — {status_label}.'
             )
             return redirect('treasurer_dashboard')
         else:
@@ -667,3 +711,64 @@ def student_requests_json(req, student_id):
         for pr in _unconfirmed_requests_for_student(student)
     ]
     return JsonResponse(data, safe=False)
+
+
+@_treasurer_required
+def confirm_pending_view(req):
+    """
+    POST-only endpoint to quickly confirm a pending Transaction row from
+    the treasurer dashboard without opening the full log form.
+
+    Accepts either:
+      - 'tx_id' (the existing PENDING Transaction id) OR
+      - 'student_id' and 'pr_id' to find an existing PENDING Transaction.
+
+    On success creates a CONFIRMED Transaction record (copying amount/note/paid_at)
+    and deletes the old PENDING record. Redirects back to the treasurer dashboard.
+    """
+    if req.method != 'POST':
+        messages.error(req, 'Invalid request method.')
+        return redirect('treasurer_dashboard')
+
+    tx = None
+    tx_id = req.POST.get('tx_id')
+    if tx_id:
+        try:
+            tx = Transaction.objects.get(pk=int(tx_id), status=Transaction.Status.PENDING)
+        except (Transaction.DoesNotExist, ValueError):
+            tx = None
+
+    if not tx:
+        # Try matching by student + payment_request
+        try:
+            student_id = int(req.POST.get('student_id') or 0)
+            pr_id = int(req.POST.get('pr_id') or 0)
+        except ValueError:
+            student_id = pr_id = 0
+
+        if student_id and pr_id:
+            tx = Transaction.objects.filter(
+                student_id=student_id,
+                payment_request_id=pr_id,
+                status=Transaction.Status.PENDING,
+            ).first()
+
+    if not tx:
+        messages.error(req, 'Pending transaction not found.')
+        return redirect('treasurer_dashboard')
+
+    # Create confirmed transaction and delete the pending one
+    now = timezone.now()
+    Transaction.objects.create(
+        student=tx.student,
+        payment_request=tx.payment_request,
+        amount=tx.amount,
+        status=Transaction.Status.CONFIRMED,
+        note=tx.note or '',
+        paid_at=tx.paid_at,
+        confirmed_at=now,
+    )
+    tx.delete()
+
+    messages.success(req, f'✅ Confirmed payment for {tx.student.get_full_name() or tx.student.username} → "{tx.payment_request.title}"')
+    return redirect('treasurer_dashboard')

@@ -15,9 +15,9 @@ class PaymentRequestForm(forms.ModelForm):
     - When `assign_to_all` is unchecked at least one student must be chosen.
     """
 
-    # Only show active, non-treasurer accounts in the student picker
+    # Show all active accounts in the student picker (including treasurer)
     assigned_to = forms.ModelMultipleChoiceField(
-        queryset=User.objects.filter(is_active=True, is_treasurer=False)
+        queryset=User.objects.filter(is_active=True)
                              .order_by('last_name', 'first_name', 'username'),
         required=False,
         widget=forms.CheckboxSelectMultiple,
@@ -93,7 +93,7 @@ class LogTransactionForm(forms.Form):
     """
 
     student = forms.ModelChoiceField(
-        queryset=User.objects.filter(is_active=True, is_treasurer=False)
+        queryset=User.objects.filter(is_active=True)
                              .order_by('last_name', 'first_name', 'username'),
         label='Student',
         empty_label='— select student —',
@@ -128,6 +128,17 @@ class LogTransactionForm(forms.Form):
         widget=forms.Textarea(attrs={'rows': 2, 'placeholder': 'Bank reference, VS/SS, any remark…'}),
     )
 
+    status = forms.ChoiceField(
+        choices=Transaction.Status.choices,
+        initial=Transaction.Status.CONFIRMED,
+        label='Transaction status',
+        help_text=(
+            'Confirmed — money verified in bank account. '
+            'Pending — submitted by student, not yet verified. '
+            'Rejected — payment was incorrect or refused.'
+        ),
+    )
+
     def __init__(self, *args, **kwargs):
         # Allow the view to pre-restrict the payment_request queryset
         pr_queryset = kwargs.pop('pr_queryset', None)
@@ -142,6 +153,7 @@ class LogTransactionForm(forms.Form):
         cleaned = super().clean()
         student         = cleaned.get('student')
         payment_request = cleaned.get('payment_request')
+        status          = cleaned.get('status')
 
         if student and payment_request:
             # Guard: student must actually be assigned to this request
@@ -155,15 +167,16 @@ class LogTransactionForm(forms.Form):
                 )
 
             # Prevent duplicate confirmed transactions for the same (student, request)
-            already_confirmed = Transaction.objects.filter(
-                student=student,
-                payment_request=payment_request,
-                status=Transaction.Status.CONFIRMED,
-            ).exists()
-            if already_confirmed:
-                raise forms.ValidationError(
-                    f'A confirmed transaction already exists for {student} '
-                    f'→ "{payment_request.title}". No duplicate created.'
-                )
+            if status == Transaction.Status.CONFIRMED:
+                already_confirmed = Transaction.objects.filter(
+                    student=student,
+                    payment_request=payment_request,
+                    status=Transaction.Status.CONFIRMED,
+                ).exists()
+                if already_confirmed:
+                    raise forms.ValidationError(
+                        f'A confirmed transaction already exists for {student} '
+                        f'→ "{payment_request.title}". No duplicate created.'
+                    )
 
         return cleaned

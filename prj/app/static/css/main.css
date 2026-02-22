@@ -1428,3 +1428,98 @@ main {
 .btn-log-tx:hover {
     opacity: 1;
 }
+
+/* ── Direct log button (missing payments table) ── */
+.btn-log-direct {
+    display: inline-block;
+    padding: .3rem .8rem;
+    background: #1a1a2e;
+    color: #e2b96f;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background .2s;
+}
+
+.btn-log-direct:hover {
+    background: #2d2d4e;
+    color: #e2b96f;
+}
+
+/* ── Pending tab — sub-section headings ── */
+.subsection-heading {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: .6rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.section-hint {
+    font-size: .85rem;
+    color: #666;
+    margin-bottom: .75rem;
+}
+
+/* Overdue row highlight in pending table */
+.row-overdue td {
+    background: #fff8f8;
+}
+
+/* ── Status radio group on log-transaction form ── */
+.status-radio-group {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-top: .35rem;
+}
+
+.status-radio-item {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .55rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    font-size: .9rem;
+    user-select: none;
+}
+
+.status-radio-item input[type="radio"] {
+    display: none;
+}
+
+.status-radio-item:has(input:checked) {
+    border-color: #1a1a2e;
+    background: #f0f1f8;
+}
+
+.status-radio-confirmed:has(input:checked) {
+    border-color: #28a745;
+    background: #f0fff4;
+}
+
+.status-radio-pending:has(input:checked) {
+    border-color: #ffc107;
+    background: #fffdf0;
+}
+
+.status-radio-rejected:has(input:checked) {
+    border-color: #dc3545;
+    background: #fff8f8;
+}
+
+.status-radio-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.status-radio-label {
+    font-weight: 600;
+}

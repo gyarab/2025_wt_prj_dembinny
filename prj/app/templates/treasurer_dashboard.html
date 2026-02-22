@@ -2,15 +2,6 @@
 {% block title %}Treasurer Dashboard — Class Fund Manager{% endblock %}
 
 {% block content %}
-<!-- ── TAB: Payment Requests ─────────────────────────────────────────── -->
-<div id="tab-requests" class="tab-panel">
-    <div class="section">
-        <div class="section-header-row">
-            <h2>📋 Payment Requests</h2>
-            <a href="{% url 'create_payment_request' %}" class="btn-new-request">+ New Request</a>
-        </div>
-    </div>
-</div>
 
 <!-- Page header -->
 <div class="page-header">
@@ -33,8 +24,8 @@
         <div class="fc-value {% if balance < 0 %}negative{% endif %}">{{ balance }} CZK</div>
     </div>
     <div class="fund-card">
-        <div class="fc-label">⏳ Awaiting Confirmation</div>
-        <div class="fc-value">{{ pending_transactions.count }}</div>
+        <div class="fc-label">⏳ Awaiting Payment</div>
+        <div class="fc-value">{{ submitted_items|length|add:missing_items|length }}</div>
     </div>
 </div>
 
@@ -43,13 +34,12 @@
     <button class="tab-btn active" onclick="switchTab(event,'tab-students')">👥 Students</button>
     <button class="tab-btn" onclick="switchTab(event,'tab-requests')">📋 Payment Requests</button>
     <button class="tab-btn" onclick="switchTab(event,'tab-pending')">
-        ⏳ Pending Transactions{% if pending_transactions %} <span class="badge badge-warning">{{
-            pending_transactions.count }}</span>{% endif %}
+        ⏳ Pending
+        {% with total=submitted_items|length|add:missing_items|length %}
+        {% if total %}<span class="badge badge-warning">{{ total }}</span>{% endif %}
+        {% endwith %}
     </button>
     <button class="tab-btn" onclick="switchTab(event,'tab-expenses')">💸 Expenses</button>
-    <a href="{% url 'log_transaction' %}" class="btn-new-request" style="margin-left:auto;align-self:center;">
-        💳 Log Transfer
-    </a>
 </div>
 
 <!-- ── TAB: Students ─────────────────────────────────────────────────────── -->
@@ -107,8 +97,7 @@
                     </td>
                     <td>
                         {% if row.missing_count > 0 or row.pending_count > 0 %}
-                        <a href="{% url 'log_transaction' %}?student={{ row.student.pk }}"
-                            class="btn-log-tx" title="Log a transfer for this student">💳</a>
+                        <a href="{% url 'log_transaction' %}?student={{ row.student.pk }}" class="btn-log-tx" title="Log a transfer for this student">💳</a>
                         {% endif %}
                     </td>
                 </tr>
@@ -124,7 +113,10 @@
 <!-- ── TAB: Payment Requests ─────────────────────────────────────────────── -->
 <div id="tab-requests" class="tab-panel">
     <div class="section">
-        <h2>📋 Payment Requests</h2>
+        <div class="section-header-row">
+            <h2>📋 Payment Requests</h2>
+            <a href="{% url 'create_payment_request' %}" class="btn-new-request">+ New Request</a>
+        </div>
         {% if all_requests %}
         <table class="data-table">
             <thead>
@@ -141,8 +133,7 @@
                 <tr>
                     <td>
                         <strong>{{ pr.title }}</strong>
-                        {% if pr.is_overdue %}<span class="badge badge-overdue"
-                            style="margin-left:.4rem;">Overdue</span>{% endif %}
+                        {% if pr.is_overdue %}<span class="badge badge-overdue" style="margin-left:.4rem;">Overdue</span>{% endif %}
                         {% if pr.description %}
                         <br><span style="font-size:.78rem;color:#888;">{{ pr.description|truncatechars:70
                             }}</span>
@@ -179,8 +170,7 @@
                             {% if pr.expected_count > 0 %}
                             {% widthratio pr.confirmed_count pr.expected_count 100 as pct %}
                             <div class="progress-wrap">
-                                <div class="progress-bar {% if pct < 40 %}low{% elif pct < 80 %}partial{% endif %}"
-                                    style="width:{{ pct }}%"></div>
+                                <div class="progress-bar {% if pct < 40 %}low{% elif pct < 80 %}partial{% endif %}" style="width:{{ pct }}%"></div>
                             </div>
                             {% endif %}
                         </div>
@@ -204,35 +194,97 @@
 <div id="tab-pending" class="tab-panel">
     <div class="section">
         <div class="section-header-row">
-            <h2>⏳ Transactions Awaiting Confirmation</h2>
+            <h2>⏳ Payments to Process</h2>
             <a href="{% url 'log_transaction' %}" class="btn-new-request">💳 Log Transfer</a>
         </div>
-        {% if pending_transactions %}
-        <p style="font-size:.88rem;color:#666;margin-bottom:1rem;">
-            These students have submitted payment. Click <strong>✓ Confirm</strong> to log the bank
-            transfer and mark the request as paid.
-        </p>
-        <div class="tx-queue">
-            {% for tx in pending_transactions %}
-            <div class="tx-card">
-                <div class="tx-title">{{ tx.student.get_full_name|default:tx.student.username }}</div>
-                <div class="tx-meta">
-                    {{ tx.payment_request.title }}
-                    · submitted {{ tx.created_at|date:"d.m.Y" }}
-                    {% if tx.note %} · <em>{{ tx.note|truncatechars:60 }}</em>{% endif %}
-                </div>
-                <div class="tx-amount">{{ tx.amount }}<br>
-                    <small style="font-size:.6em;font-weight:400;color:#888;">CZK</small>
-                </div>
-                <div class="tx-actions">
-                    <a href="{% url 'log_transaction_prefill' pr_id=tx.payment_request.pk student_id=tx.student.pk %}"
-                        class="btn-confirm-tx">✓ Confirm</a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+
+        <!-- ── Sub-section: Student-submitted payments ─────────────────── -->
+        <h3 class="subsection-heading">
+            📥 Submitted by Students
+            {% if submitted_items %}<span class="badge badge-warning">{{ submitted_items|length }}</span>{% endif %}
+        </h3>
+        {% if submitted_items %}
+        <p class="section-hint">The student claims they paid — click <strong>✓ Confirm</strong> once you see the money in the bank.</p>
+        <table class="data-table pending-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Payment Request</th>
+                    <th>Amount</th>
+                    <th>Submitted</th>
+                    <th>Note</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in submitted_items %}
+                <tr>
+                    <td><strong>{{ item.student.get_full_name|default:item.student.username }}</strong></td>
+                    <td>{{ item.payment_request.title }}</td>
+                    <td><strong>{{ item.tx.amount }} CZK</strong></td>
+                    <td style="font-size:.82rem;color:#888;">{{ item.tx.created_at|date:"d.m.Y" }}</td>
+                    <td style="font-size:.82rem;color:#666;">{{ item.tx.note|truncatechars:40|default:"—" }}</td>
+                    <td>
+                            <form method="post" action="{% url 'confirm_pending' %}" style="display:inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="tx_id" value="{{ item.tx.pk }}">
+                                <button type="submit" class="btn-confirm-tx">✓ Confirm</button>
+                            </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-        <p class="empty">✅ No transactions waiting for review.</p>
+        <p class="empty">No student-submitted payments waiting.</p>
+        {% endif %}
+
+        <!-- ── Sub-section: Not yet paid ───────────────────────────────── -->
+        <h3 class="subsection-heading" style="margin-top:2rem;">
+            ❌ Not Yet Paid
+            {% if missing_items %}<span class="badge badge-danger">{{ missing_items|length }}</span>{% endif %}
+        </h3>
+        {% if missing_items %}
+        <p class="section-hint">These students haven't paid yet — click <strong>💳 Log</strong> to record a transfer for them directly.</p>
+        <table class="data-table pending-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Payment Request</th>
+                    <th>Amount Due</th>
+                    <th>Due Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in missing_items %}
+                <tr {% if item.payment_request.is_overdue %}class="row-overdue" {% endif %}>
+                    <td><strong>{{ item.student.get_full_name|default:item.student.username }}</strong></td>
+                    <td>
+                        {{ item.payment_request.title }}
+                        {% if item.payment_request.is_overdue %}
+                        <span class="badge badge-overdue" style="margin-left:.3rem;">Overdue</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ item.payment_request.amount }} CZK</strong></td>
+                    <td style="font-size:.82rem;">
+                        {% if item.payment_request.due_date %}
+                        {% if item.payment_request.is_overdue %}
+                        <span class="overdue">{{ item.payment_request.due_date|date:"d.m.Y" }}</span>
+                        {% else %}
+                        {{ item.payment_request.due_date|date:"d.m.Y" }}
+                        {% endif %}
+                        {% else %}<span style="color:#aaa;">—</span>{% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'log_transaction_prefill' pr_id=item.payment_request.pk student_id=item.student.pk %}" class="btn-log-direct">💳 Log</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">✅ All assigned students have paid or submitted payment.</p>
         {% endif %}
     </div>
 </div>
