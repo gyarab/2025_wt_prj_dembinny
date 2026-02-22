@@ -160,7 +160,13 @@ def _generate_spd_qr(
     """
     import base64
     import io
-    import qrcode
+    try:
+        import qrcode
+    except Exception:
+        # qrcode library is optional at runtime; return None so callers can
+        # continue rendering pages without the pre-generated image.
+        print("The library qrcode is not imported")
+        return None
 
     parts = ["SPD*1.0", f"ACC:{account_id}", "CC:CZK"]
     if amount is not None:
