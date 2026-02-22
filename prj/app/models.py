@@ -20,6 +20,11 @@ class User(AbstractUser):
         help_text="Designates whether this user is the class treasurer "
                   "with administrative privileges over the fund.",
     )
+    hide_fund_balance = models.BooleanField(
+        default=False,
+        verbose_name="Hide fund balance",
+        help_text="When checked, the class fund balance card is hidden on this user's dashboard.",
+    )
 
     def __str__(self):
         role = "Treasurer" if self.is_treasurer else "Student"

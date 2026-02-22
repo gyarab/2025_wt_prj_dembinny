@@ -1295,6 +1295,23 @@ main {
     color: #1a1a2e;
 }
 
+.btn-danger {
+    display: inline-block;
+    padding: .62rem 1.5rem;
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+}
+
+.btn-danger:hover {
+    background: #922b21;
+}
+
 /* ═══════════════════════════════════════════════════════════
    Log Transaction form extras
    ═══════════════════════════════════════════════════════════ */

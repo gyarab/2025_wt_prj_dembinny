@@ -34,6 +34,9 @@ urlpatterns = [
     path('treasurer/transactions/log/<int:pr_id>/<int:student_id>/', views.log_transaction_view, name='log_transaction_prefill'),
     path('treasurer/api/student-requests/<int:student_id>/', views.student_requests_json, name='student_requests_json'),
     path('treasurer/transactions/confirm/', views.confirm_pending_view, name='confirm_pending'),
+    path('treasurer/expenses/log/', views.log_expense_view, name='log_expense'),
+    path('treasurer/expenses/log/<int:expense_id>/', views.log_expense_view, name='edit_expense'),
+    path('treasurer/expenses/delete/<int:expense_id>/', views.delete_expense_view, name='delete_expense'),
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

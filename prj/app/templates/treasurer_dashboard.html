@@ -292,7 +292,10 @@
 <!-- ── TAB: Expenses ─────────────────────────────────────────────────────── -->
 <div id="tab-expenses" class="tab-panel">
     <div class="section">
-        <h2>💸 Recent Fund Expenses</h2>
+        <div class="section-header-row">
+            <h2>💸 Fund Expenses</h2>
+            <a href="{% url 'log_expense' %}" class="btn-new-request">+ Log Expense</a>
+        </div>
         {% if recent_expenses %}
         <table class="data-table">
             <thead>
@@ -303,6 +306,7 @@
                     <th>Date</th>
                     <th>Recorded by</th>
                     <th>Published</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -311,15 +315,13 @@
                     <td>
                         <strong>{{ exp.title }}</strong>
                         {% if exp.description %}
-                        <br><span style="font-size:.78rem;color:#888;">{{ exp.description|truncatechars:60
-                            }}</span>
+                        <br><span style="font-size:.78rem;color:#888;">{{ exp.description|truncatechars:60 }}</span>
                         {% endif %}
                     </td>
                     <td><strong>{{ exp.amount }} CZK</strong></td>
                     <td><span class="badge badge-secondary">{{ exp.get_category_display }}</span></td>
                     <td>{{ exp.spent_at|date:"d.m.Y" }}</td>
-                    <td style="font-size:.85rem;">{{
-                        exp.recorded_by.get_full_name|default:exp.recorded_by.username|default:"—" }}</td>
+                    <td style="font-size:.85rem;">{{ exp.recorded_by.get_full_name|default:exp.recorded_by.username|default:"—" }}</td>
                     <td>
                         {% if exp.is_published %}
                         <span class="badge badge-success">Yes</span>
@@ -327,15 +329,21 @@
                         <span class="badge badge-secondary">No</span>
                         {% endif %}
                     </td>
+                    <td style="white-space:nowrap;">
+                        <a href="{% url 'edit_expense' exp.pk %}" class="btn-log-tx" title="Edit expense">✏</a>
+                        <form method="post" action="{% url 'delete_expense' exp.pk %}" style="display:inline;"
+                            onsubmit="return confirm('Delete this expense?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-log-tx" title="Delete expense"
+                                style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:1rem;padding:0 .3rem;">🗑</button>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <p style="margin-top:.75rem;font-size:.85rem;">
-            <a href="/admin/app/expense/" style="color:#1a1a2e;font-weight:600;">Manage all expenses →</a>
-        </p>
         {% else %}
-        <p class="empty">No expenses recorded yet.</p>
+        <p class="empty">No expenses recorded yet. <a href="{% url 'log_expense' %}">Log the first one →</a></p>
         {% endif %}
     </div>
 </div>

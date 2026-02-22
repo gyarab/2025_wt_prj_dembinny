@@ -2,7 +2,7 @@ from django import forms
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import PaymentRequest, Transaction, User
+from .models import Expense, PaymentRequest, Transaction, User
 
 
 class PaymentRequestForm(forms.ModelForm):
@@ -180,3 +180,56 @@ class LogTransactionForm(forms.Form):
                     )
 
         return cleaned
+
+
+class ExpenseForm(forms.ModelForm):
+    """
+    Treasurer form to log a class fund expense (e.g. 'Bought pizza: 400 CZK').
+    """
+
+    class Meta:
+        model  = Expense
+        fields = [
+            'title',
+            'description',
+            'amount',
+            'category',
+            'spent_at',
+            'is_published',
+        ]
+        widgets = {
+            'title':       forms.TextInput(attrs={
+                'placeholder': 'e.g. Bought pizza for class party',
+                'class': 'form-control-input',
+            }),
+            'description': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Optional details (receipt number, shop, occasion…)',
+                'class': 'form-control-input',
+            }),
+            'amount':      forms.NumberInput(attrs={
+                'step': '0.01', 'min': '0', 'placeholder': '0.00',
+                'class': 'form-control-input',
+            }),
+            'category':    forms.Select(attrs={'class': 'form-control-input'}),
+            'spent_at':    forms.DateInput(attrs={'type': 'date', 'class': 'form-control-input'}, format='%Y-%m-%d'),
+            'is_published': forms.CheckboxInput(),
+        }
+        labels = {
+            'title':        'What was bought / spent on?',
+            'description':  'Details (optional)',
+            'amount':       'Amount (CZK)',
+            'category':     'Category',
+            'spent_at':     'Date of expense',
+            'is_published': 'Visible to all students',
+        }
+        help_texts = {
+            'is_published': 'Uncheck to keep this expense hidden from students for now.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['spent_at'].input_formats = ['%Y-%m-%d']
+        # Default to today
+        if not self.data.get('spent_at') and not self.instance.pk:
+            self.fields['spent_at'].initial = timezone.localdate().strftime('%Y-%m-%d')

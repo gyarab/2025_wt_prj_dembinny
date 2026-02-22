@@ -13,16 +13,16 @@ class UserAdmin(BaseUserAdmin):
 
     # Show is_treasurer in the user list table
     list_display = BaseUserAdmin.list_display + ("is_treasurer",)
-    list_filter = BaseUserAdmin.list_filter + ("is_treasurer",)
+    list_filter  = BaseUserAdmin.list_filter  + ("is_treasurer",)
 
-    # Add is_treasurer to the "Permissions" section of the change form
+    # Add both custom fields to the "Class Fund Role" section of the change form
     fieldsets = BaseUserAdmin.fieldsets + (
-        ("Class Fund Role", {"fields": ("is_treasurer",)}),
+        ("Class Fund Role", {"fields": ("is_treasurer", "hide_fund_balance")}),
     )
 
-    # Also expose it on the "add user" form
+    # Also expose them on the "add user" form
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        ("Class Fund Role", {"fields": ("is_treasurer",)}),
+        ("Class Fund Role", {"fields": ("is_treasurer", "hide_fund_balance")}),
     )
 
 

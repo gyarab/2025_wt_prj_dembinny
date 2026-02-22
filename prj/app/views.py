@@ -6,7 +6,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .forms import LogTransactionForm, PaymentRequestForm
+from .forms import ExpenseForm, LogTransactionForm, PaymentRequestForm
 from .models import BankAccount, Expense, PaymentRequest, Transaction, User
 
 
@@ -771,4 +771,59 @@ def confirm_pending_view(req):
     tx.delete()
 
     messages.success(req, f'✅ Confirmed payment for {tx.student.get_full_name() or tx.student.username} → "{tx.payment_request.title}"')
+    return redirect('treasurer_dashboard')
+
+
+# ── Log Expense ───────────────────────────────────────────────────────────────
+
+@_treasurer_required
+def log_expense_view(req, expense_id=None):
+    """
+    Treasurer-only form for logging (or editing) a class fund expense.
+
+    GET  /treasurer/expenses/log/           — blank form to create a new expense
+    GET  /treasurer/expenses/log/<id>/      — pre-filled form to edit an existing expense
+    POST                                    — save and redirect back to the treasurer dashboard
+    """
+    instance = None
+    if expense_id:
+        try:
+            instance = Expense.objects.get(pk=expense_id)
+        except Expense.DoesNotExist:
+            messages.error(req, 'Expense not found.')
+            return redirect('treasurer_dashboard')
+
+    if req.method == 'POST':
+        form = ExpenseForm(req.POST, instance=instance)
+        if form.is_valid():
+            expense = form.save(commit=False)
+            if not instance:
+                expense.recorded_by = req.user
+            expense.save()
+            verb = 'updated' if instance else 'logged'
+            messages.success(req, f'✅ Expense "{expense.title}" ({expense.amount} CZK) {verb} successfully.')
+            return redirect('treasurer_dashboard')
+        else:
+            messages.error(req, 'Please fix the errors below.')
+    else:
+        form = ExpenseForm(instance=instance)
+
+    return render(req, 'log_expense.html', {
+        'form':     form,
+        'instance': instance,
+    })
+
+
+@_treasurer_required
+def delete_expense_view(req, expense_id):
+    """POST-only endpoint to delete an expense."""
+    if req.method != 'POST':
+        return redirect('treasurer_dashboard')
+    try:
+        expense = Expense.objects.get(pk=expense_id)
+        title = expense.title
+        expense.delete()
+        messages.success(req, f'🗑 Expense "{title}" deleted.')
+    except Expense.DoesNotExist:
+        messages.error(req, 'Expense not found.')
     return redirect('treasurer_dashboard')

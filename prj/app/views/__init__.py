@@ -26,6 +26,8 @@ from .student import (
 from .treasurer import (
     confirm_pending_view,
     create_payment_request_view,
+    delete_expense_view,
+    log_expense_view,
     log_transaction_view,
     student_requests_json,
     treasurer_dashboard_view,
@@ -49,4 +51,6 @@ __all__ = [
     "log_transaction_view",
     "confirm_pending_view",
     "student_requests_json",
+    "log_expense_view",
+    "delete_expense_view",
 ]
