@@ -13,15 +13,15 @@
 <div class="fund-summary">
     <div class="fund-card income">
         <div class="fc-label">💰 Total Collected</div>
-        <div class="fc-value">{{ total_collected }} CZK</div>
+        <div class="fc-value">{{ fund_collected }} CZK</div>
     </div>
     <div class="fund-card expense">
         <div class="fc-label">💸 Total Spent</div>
-        <div class="fc-value">{{ total_spent }} CZK</div>
+        <div class="fc-value">{{ fund_spent }} CZK</div>
     </div>
     <div class="fund-card balance">
         <div class="fc-label">🏦 Fund Balance</div>
-        <div class="fc-value {% if balance < 0 %}negative{% endif %}">{{ balance }} CZK</div>
+        <div class="fc-value {% if fund_balance < 0 %}negative{% endif %}">{{ fund_balance }} CZK</div>
     </div>
     <div class="fund-card">
         <div class="fc-label">⏳ Awaiting Payment</div>

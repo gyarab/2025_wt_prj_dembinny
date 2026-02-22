@@ -62,6 +62,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Fund balance totals available in every template
+                'app.context_processors.fund_balance',
             ],
         },
     },

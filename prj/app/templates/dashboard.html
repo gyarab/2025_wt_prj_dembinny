@@ -27,6 +27,14 @@
         <div class="label">Awaiting Confirmation</div>
         <div class="value">{{ awaiting_requests.count }}</div>
     </div>
+    <div class="stat-card {% if fund_balance >= 0 %}fund-positive{% else %}fund-negative{% endif %}">
+        <div class="label">🏦 Class Fund Balance</div>
+        <div class="value fund-balance-value">{{ fund_balance }} CZK</div>
+        <div class="fund-breakdown">
+            <span>↑ {{ fund_collected }} collected</span>
+            <span>↓ {{ fund_spent }} spent</span>
+        </div>
+    </div>
 </div>
 
 <!-- Unpaid payment requests -->

@@ -107,12 +107,9 @@ def treasurer_dashboard_view(req):
         })
 
     # ── Fund totals ───────────────────────────────────────────────────────────
-    total_collected = (
-        Transaction.objects.filter(status=Transaction.Status.CONFIRMED)
-        .aggregate(s=Sum('amount'))['s'] or 0
-    )
-    total_spent = Expense.objects.aggregate(s=Sum('amount'))['s'] or 0
-    balance     = total_collected - total_spent
+    # (fund_collected / fund_spent / fund_balance are injected globally by the
+    #  app.context_processors.fund_balance context processor, so we don't need
+    #  to recompute them here.)
 
     # ── Pending tab: submitted + missing ─────────────────────────────────────
     confirmed_pairs = set(
@@ -153,15 +150,12 @@ def treasurer_dashboard_view(req):
     recent_expenses = Expense.objects.order_by('-spent_at')[:8]
 
     return render(req, 'treasurer_dashboard.html', {
-        'all_requests':         all_requests,
-        'student_rows':         student_rows,
-        'submitted_items':      submitted_items,
-        'missing_items':        missing_items,
-        'recent_expenses':      recent_expenses,
-        'total_collected':      total_collected,
-        'total_spent':          total_spent,
-        'balance':              balance,
-        'today':                today,
+        'all_requests':    all_requests,
+        'student_rows':    student_rows,
+        'submitted_items': submitted_items,
+        'missing_items':   missing_items,
+        'recent_expenses': recent_expenses,
+        'today':           today,
     })
 
 

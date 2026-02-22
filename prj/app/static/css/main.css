@@ -1523,3 +1523,34 @@ main {
 .status-radio-label {
     font-weight: 600;
 }
+/* ═══════════════════════════════════════════════════════════
+   Fund Balance card  (student dashboard stat-card variant)
+   ═══════════════════════════════════════════════════════════ */
+.stat-card.fund-positive {
+    border-color: #1a7a4a;
+}
+
+.stat-card.fund-negative {
+    border-color: #dc3545;
+}
+
+.stat-card.fund-positive .fund-balance-value {
+    color: #1a7a4a;
+}
+
+.stat-card.fund-negative .fund-balance-value {
+    color: #dc3545;
+}
+
+.fund-breakdown {
+    display: flex;
+    gap: .75rem;
+    margin-top: .45rem;
+    font-size: .72rem;
+    color: #888;
+    flex-wrap: wrap;
+}
+
+.fund-breakdown span {
+    white-space: nowrap;
+}
