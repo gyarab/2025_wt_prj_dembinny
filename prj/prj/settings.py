@@ -24,6 +24,10 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://two025-wt-prj-dembinny.onrender.com',
+]
+
 # ── Application definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,7 +75,19 @@ WSGI_APPLICATION = 'prj.wsgi.application'
 # Fallback:  local SQLite for development
 
 _database_url = os.environ.get('DATABASE_URL')
+_full_database_setup = os.environ.get('CUSTOM_DATABASE')
 
+if _full_database_setup:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.' + _full_database_setup,
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 if _database_url:
     DATABASES = {
         'default': dj_database_url.parse(
