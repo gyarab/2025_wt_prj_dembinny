@@ -88,15 +88,15 @@ def budget_view(req):
     def month_key(e):
         return (e.spent_at.year, e.spent_at.month)
 
-    grouped = [
-        {
+    grouped = []
+    for k, g in groupby(expenses, key=month_key):
+        items = list(g)
+        grouped.append({
             'year':     k[0],
             'month':    k[1],
-            'items':    items := list(g),
+            'items':    items,
             'subtotal': sum(e.amount for e in items),
-        }
-        for k, g in groupby(expenses, key=month_key)
-    ]
+        })
 
     category_totals = (
         Expense.objects.filter(is_published=True)

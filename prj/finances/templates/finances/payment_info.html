@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'core/base.html' %}
 {% block title %}How to Pay — Class Fund Manager{% endblock %}
 
 {% block content %}
@@ -83,7 +83,7 @@
         <h2 class="h4 fw-bold mb-2">Payment details not yet configured</h2>
         <p class="text-muted">The class treasurer has not set up the bank account details yet. Check back soon!</p>
         {% if user.is_treasurer %}
-        <a href="/admin/app/bankaccount/add/" class="btn btn-cfm mt-2">Add Bank Account</a>
+        <a href="/admin/finances/bankaccount/add/" class="btn btn-cfm mt-2">Add Bank Account</a>
         {% endif %}
     </div>
 </div>

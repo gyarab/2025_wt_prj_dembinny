@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # ── Project apps ──────────────────────────────────────────────────────────
-    'app',             # legacy monolith — kept while migrating to the new apps below
     'accounts',        # identity, authentication, classes, student profiles
     'core',            # public pages, utilities, custom error handlers
     'finances',        # money engine: payments, transactions, expenses
@@ -125,7 +124,7 @@ USE_TZ = True
 
 # ── Static files ──────────────────────────────────────────────────────────────
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'app' / 'static']   # TODO: move to core/static when app is removed
+STATICFILES_DIRS = [BASE_DIR / 'core' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'          # collectstatic target
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
