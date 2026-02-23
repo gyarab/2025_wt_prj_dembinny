@@ -36,7 +36,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app',
+    # ── Project apps ──────────────────────────────────────────────────────────
+    'app',             # legacy monolith — kept while migrating to the new apps below
+    'accounts',        # identity, authentication, classes, student profiles
+    'core',            # public pages, utilities, custom error handlers
+    'finances',        # money engine: payments, transactions, expenses
+    'communications',  # emails, QR codes, notification log
 ]
 
 MIDDLEWARE = [
