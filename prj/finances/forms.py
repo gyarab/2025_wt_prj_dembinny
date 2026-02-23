@@ -105,25 +105,6 @@ class LogTransactionForm(forms.Form):
             self.fields['payment_request'].queryset = pr_queryset
         if not self.data.get('paid_at'):
             self.fields['paid_at'].initial = timezone.localtime().strftime('%Y-%m-%dT%H:%M')
-    status = forms.ChoiceField(
-        choices=Transaction.Status.choices,
-        initial=Transaction.Status.CONFIRMED,
-        label='Transaction status',
-    )
-
-    def __init__(self, *args, **kwargs):
-        pr_queryset = kwargs.pop('pr_queryset', None)
-        super().__init__(*args, **kwargs)
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        self.fields['student'].queryset = (
-            User.objects.filter(is_active=True)
-            .order_by('last_name', 'first_name', 'username')
-        )
-        if pr_queryset is not None:
-            self.fields['payment_request'].queryset = pr_queryset
-        if not self.data.get('paid_at'):
-            self.fields['paid_at'].initial = timezone.localtime().strftime('%Y-%m-%dT%H:%M')
 
     def clean(self):
         cleaned = super().clean()
