@@ -13,18 +13,17 @@ from .models import CustomUser, SchoolClass, StudentProfile
 @admin.register(CustomUser)
 class CustomUserAdmin(BaseUserAdmin):
     """
-    Extends the default UserAdmin to surface the `role` and
-    `hide_fund_balance` fields in both the list and edit views.
+    Extends the default UserAdmin to surface is_treasurer and hide_fund_balance.
     """
 
-    list_display  = BaseUserAdmin.list_display + ('role',)
-    list_filter   = BaseUserAdmin.list_filter  + ('role',)
+    list_display  = BaseUserAdmin.list_display + ('is_treasurer',)
+    list_filter   = BaseUserAdmin.list_filter  + ('is_treasurer',)
 
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('Class Fund Role', {'fields': ('role', 'hide_fund_balance')}),
+        ('Class Fund Role', {'fields': ('is_treasurer', 'hide_fund_balance')}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        ('Class Fund Role', {'fields': ('role', 'hide_fund_balance')}),
+        ('Class Fund Role', {'fields': ('is_treasurer', 'hide_fund_balance')}),
     )
 
 

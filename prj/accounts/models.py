@@ -3,13 +3,9 @@ accounts/models.py
 ──────────────────
 Identity, authentication, and multi-tenancy models.
 
-CustomUser  – extends AbstractUser with a role flag (Teacher vs. Parent)
-              and a preference flag (hide_fund_balance).
-SchoolClass – a single class cohort, e.g. "4.B – 2026".
+CustomUser    – extends AbstractUser with an is_treasurer flag and hide_fund_balance preference.
+SchoolClass   – a single class cohort, e.g. "4.B – 2026".
 StudentProfile – the child's record: name, parent FK, unique Variable Symbol.
-
-NOTE: AUTH_USER_MODEL must be set to 'accounts.CustomUser' in settings.py
-      once the migration from 'app.User' is complete.
 """
 
 from django.contrib.auth.models import AbstractUser
@@ -20,33 +16,23 @@ class CustomUser(AbstractUser):
     """
     Custom user model for Class Fund Manager.
 
-    Roles
-    -----
-    TEACHER  – the class treasurer / teacher who manages the fund.
-    PARENT   – a parent/guardian who pays on behalf of their child.
-
-    The `is_treasurer` alias is kept for backward compatibility with
-    templates and decorators that still reference it.
+    is_treasurer=True  → the class teacher/treasurer who manages the fund.
+    is_treasurer=False → a regular student / parent account.
     """
 
-    class Role(models.TextChoices):
-        TEACHER = 'teacher', 'Teacher / Treasurer'
-        PARENT  = 'parent',  'Parent / Guardian'
-
-    role = models.CharField(
-        max_length=20,
-        choices=Role.choices,
-        default=Role.PARENT,
-        verbose_name='Role',
-        help_text='Teachers manage the fund; Parents receive payment requests.',
+    is_treasurer = models.BooleanField(
+        default=False,
+        verbose_name='Treasurer',
+        help_text='Designates whether this user is the class treasurer '
+                  'with administrative privileges over the fund.',
     )
     hide_fund_balance = models.BooleanField(
         default=False,
         verbose_name='Hide fund balance',
-        help_text='When checked, the class fund balance card is hidden on this user\'s dashboard.',
+        help_text="When checked, the class fund balance card is hidden on this user's dashboard.",
     )
 
-    # Avoid reverse-accessor clashes with app.User (both active during migration)
+    # Avoid reverse-accessor clashes with app.User while both are in INSTALLED_APPS
     groups = models.ManyToManyField(
         'auth.Group',
         blank=True,
@@ -62,14 +48,9 @@ class CustomUser(AbstractUser):
         verbose_name='user permissions',
     )
 
-    # ── Convenience property so existing code keeps working ──────────────────
-    @property
-    def is_treasurer(self):
-        return self.role == self.Role.TEACHER
-
     def __str__(self):
-        role_label = self.get_role_display()
-        return f"{self.get_full_name() or self.username} ({role_label})"
+        role = 'Treasurer' if self.is_treasurer else 'Student'
+        return f"{self.get_full_name() or self.username} ({role})"
 
     class Meta:
         verbose_name = 'User'
@@ -94,7 +75,7 @@ class SchoolClass(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        limit_choices_to={'role': CustomUser.Role.TEACHER},
+        limit_choices_to={'is_treasurer': True},
         related_name='managed_classes',
         help_text='The teacher/treasurer responsible for this class.',
     )
@@ -134,7 +115,7 @@ class StudentProfile(models.Model):
     parent = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        limit_choices_to={'role': CustomUser.Role.PARENT},
+        limit_choices_to={'is_treasurer': False},
         related_name='children',
         help_text='The parent/guardian who will receive payment requests and pay.',
     )

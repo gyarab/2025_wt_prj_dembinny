@@ -67,7 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'app.context_processors.fund_balance',
+                'core.context_processors.fund_balance',
             ],
         },
     },
@@ -125,12 +125,14 @@ USE_TZ = True
 
 # ── Static files ──────────────────────────────────────────────────────────────
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'app' / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'app' / 'static']   # TODO: move to core/static when app is removed
 STATIC_ROOT = BASE_DIR / 'staticfiles'          # collectstatic target
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── Custom user model ─────────────────────────────────────────────────────────
-AUTH_USER_MODEL = 'app.User'
+# accounts.CustomUser is the real user model — its tables are in the DB.
+# app.User is kept only as a compatibility shim during the migration period.
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # ── Authentication redirects ──────────────────────────────────────────────────
 LOGIN_URL = 'login'
