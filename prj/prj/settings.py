@@ -36,7 +36,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app',
+    # ── Project apps ──────────────────────────────────────────────────────────
+    'accounts',        # identity, authentication, classes, student profiles
+    'core',            # public pages, utilities, custom error handlers
+    'finances',        # money engine: payments, transactions, expenses
+    'communications',  # emails, QR codes, notification log
 ]
 
 MIDDLEWARE = [
@@ -62,7 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'app.context_processors.fund_balance',
+                'core.context_processors.fund_balance',
             ],
         },
     },
@@ -75,7 +79,19 @@ WSGI_APPLICATION = 'prj.wsgi.application'
 # Fallback:  local SQLite for development
 
 _database_url = os.environ.get('DATABASE_URL')
+_full_database_setup = os.environ.get('CUSTOM_DATABASE')
 
+if _full_database_setup:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.' + _full_database_setup,
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 if _database_url:
     DATABASES = {
         'default': dj_database_url.parse(
@@ -108,12 +124,14 @@ USE_TZ = True
 
 # ── Static files ──────────────────────────────────────────────────────────────
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'app' / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'core' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'          # collectstatic target
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── Custom user model ─────────────────────────────────────────────────────────
-AUTH_USER_MODEL = 'app.User'
+# accounts.CustomUser is the real user model — its tables are in the DB.
+# app.User is kept only as a compatibility shim during the migration period.
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # ── Authentication redirects ──────────────────────────────────────────────────
 LOGIN_URL = 'login'

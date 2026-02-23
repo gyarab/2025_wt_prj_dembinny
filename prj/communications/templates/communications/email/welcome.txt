@@ -1,0 +1,12 @@
+Hi {{ user.get_full_name|default:user.username }},
+
+Welcome to Class Fund Manager!
+
+Your account has been created{% if school_class %} for class {{ school_class }}{% endif %}.
+
+You can log in at: {{ login_url }}
+
+If you have any questions, please contact your class teacher.
+
+Best regards,
+Class Fund Manager

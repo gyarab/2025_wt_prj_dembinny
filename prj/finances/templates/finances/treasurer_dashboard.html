@@ -1,0 +1,393 @@
+{% extends 'core/base.html' %}
+{% block title %}Treasurer Dashboard — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="mb-4">
+    <h1 class="h3 fw-bold mb-1">⚙ Treasurer Dashboard</h1>
+    <p class="text-muted">{{ today|date:"F j, Y" }}</p>
+</div>
+
+<!-- ── Fund summary cards ─────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100 stat-card-success">
+            <div class="card-body">
+                <div class="small text-muted mb-1">💰 Total Collected</div>
+                <div class="fs-4 fw-bold text-success">{{ fund_collected }} CZK</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100 stat-card-danger">
+            <div class="card-body">
+                <div class="small text-muted mb-1">💸 Total Spent</div>
+                <div class="fs-4 fw-bold text-danger">{{ fund_spent }} CZK</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted mb-1">🏦 Fund Balance</div>
+                <div class="fs-4 fw-bold {% if fund_balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ fund_balance }} CZK</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted mb-1">⏳ Awaiting Payment</div>
+                <div class="fs-4 fw-bold">{{ submitted_items|length|add:missing_items|length }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Tabs ───────────────────────────────────────────────────────────────── -->
+<ul class="nav nav-tabs mb-3" id="dashTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-students-btn" data-bs-toggle="tab" data-bs-target="#tab-students" type="button">👥 Students</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-requests-btn" data-bs-toggle="tab" data-bs-target="#tab-requests" type="button">📋 Payment Requests</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-pending-btn" data-bs-toggle="tab" data-bs-target="#tab-pending" type="button">
+            ⏳ Pending
+            {% with total=submitted_items|length|add:missing_items|length %}
+            {% if total %}<span class="badge bg-warning text-dark ms-1">{{ total }}</span>{% endif %}
+            {% endwith %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-expenses-btn" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">💸 Expenses</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="dashTabContent">
+
+    <!-- ── TAB: Students ─────────────────────────────────────────────────── -->
+    <div class="tab-pane fade show active" id="tab-students" role="tabpanel">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">👥 All Students</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if student_rows %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>✅ Paid</th>
+                                <th>⏳ Pending</th>
+                                <th>❌ Missing</th>
+                                <th>Amount Paid</th>
+                                <th>Still Owes</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in student_rows %}
+                            <tr>
+                                <td>
+                                    <strong>{{ row.student.get_full_name|default:row.student.username }}</strong>
+                                    {% if row.student.email %}
+                                    <br><span class="text-muted small">{{ row.student.email }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-success fw-semibold">{{ row.paid_count }}</td>
+                                <td>
+                                    {% if row.pending_count %}
+                                    <span class="text-warning fw-semibold">{{ row.pending_count }}</span>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>
+                                    {% if row.missing_count %}
+                                    <span class="text-danger fw-semibold">{{ row.missing_count }}</span>
+                                    {% else %}<span class="text-success">0</span>{% endif %}
+                                </td>
+                                <td><strong>{{ row.paid_total }} CZK</strong></td>
+                                <td>
+                                    {% if row.owed_total %}
+                                    <span class="text-danger fw-semibold">{{ row.owed_total }} CZK</span>
+                                    {% else %}<span class="text-success">0 CZK</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if row.missing_count == 0 and row.pending_count == 0 %}
+                                    <span class="badge bg-success">All paid ✓</span>
+                                    {% elif row.missing_count == 0 %}
+                                    <span class="badge bg-warning text-dark">Confirming</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Owes money</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.missing_count > 0 or row.pending_count > 0 %}
+                                    <a href="{% url 'log_transaction' %}?student={{ row.student.pk }}" class="btn btn-sm btn-outline-secondary" title="Log a transfer for this student">💳</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="p-3 mb-0 text-muted">No student accounts found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TAB: Payment Requests ─────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-requests" role="tabpanel">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-bold">📋 Payment Requests</h5>
+                <a href="{% url 'create_payment_request' %}" class="btn btn-cfm btn-sm">+ New Request</a>
+            </div>
+            <div class="card-body p-0">
+                {% if all_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                                <th>Progress</th>
+                                <th>Collected</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pr in all_requests %}
+                            <tr>
+                                <td>
+                                    <strong>{{ pr.title }}</strong>
+                                    {% if pr.is_overdue %}<span class="badge bg-danger ms-1">Overdue</span>{% endif %}
+                                    {% if pr.description %}
+                                    <br><span class="text-muted small">{{ pr.description|truncatechars:70 }}</span>
+                                    {% endif %}
+                                    {% if pr.variable_symbol or pr.specific_symbol %}
+                                    <br><span class="text-muted" style="font-size:.72rem;">
+                                        {% if pr.variable_symbol %}VS: {{ pr.variable_symbol }}{% endif %}
+                                        {% if pr.specific_symbol %} · SS: {{ pr.specific_symbol }}{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ pr.amount }} CZK</strong></td>
+                                <td>
+                                    {% if pr.due_date %}
+                                    {% if pr.is_overdue %}
+                                    <span class="text-danger fw-semibold">{{ pr.due_date|date:"d.m.Y" }}</span>
+                                    {% else %}
+                                    {{ pr.due_date|date:"d.m.Y" }}
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small mb-1">
+                                        <span class="text-success">{{ pr.confirmed_count }} confirmed</span>
+                                        {% if pr.pending_count %} · <span class="text-warning">{{ pr.pending_count }} pending</span>{% endif %}
+                                        {% if pr.missing_count %} · <span class="text-danger">{{ pr.missing_count }} missing</span>{% endif %}
+                                        <span class="text-muted"> / {{ pr.expected_count }}</span>
+                                    </div>
+                                    {% if pr.expected_count > 0 %}
+                                    {% widthratio pr.confirmed_count pr.expected_count 100 as pct %}
+                                    <div class="progress" style="height:6px;">
+                                        <div class="progress-bar {% if pct < 40 %}bg-danger{% elif pct < 80 %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ pct }}%"></div>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ pr.collected }} CZK</strong><br>
+                                    <span class="text-muted small">of {{ pr.expected_total }} CZK</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="p-3 mb-0 text-muted">No payment requests yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TAB: Pending Transactions ─────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-pending" role="tabpanel">
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-bold">⏳ Payments to Process</h5>
+                <a href="{% url 'log_transaction' %}" class="btn btn-cfm btn-sm">💳 Log Transfer</a>
+            </div>
+            <div class="card-body">
+
+                <!-- Sub-section: Student-submitted -->
+                <h6 class="fw-bold mb-2">
+                    📥 Submitted by Students
+                    {% if submitted_items %}<span class="badge bg-warning text-dark ms-1">{{ submitted_items|length }}</span>{% endif %}
+                </h6>
+                {% if submitted_items %}
+                <p class="text-muted small mb-2">The student claims they paid — click <strong>✓ Confirm</strong> once you see the money in the bank.</p>
+                <div class="table-responsive mb-4">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Payment Request</th>
+                                <th>Amount</th>
+                                <th>Submitted</th>
+                                <th>Note</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in submitted_items %}
+                            <tr>
+                                <td><strong>{{ item.student.get_full_name|default:item.student.username }}</strong></td>
+                                <td>{{ item.payment_request.title }}</td>
+                                <td><strong>{{ item.tx.amount }} CZK</strong></td>
+                                <td class="text-muted small">{{ item.tx.created_at|date:"d.m.Y" }}</td>
+                                <td class="text-muted small">{{ item.tx.note|truncatechars:40|default:"—" }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'confirm_pending' %}" style="display:inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="tx_id" value="{{ item.tx.pk }}">
+                                        <button type="submit" class="btn btn-sm btn-success">✓ Confirm</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-4">No student-submitted payments waiting.</p>
+                {% endif %}
+
+                <!-- Sub-section: Not yet paid -->
+                <h6 class="fw-bold mb-2">
+                    ❌ Not Yet Paid
+                    {% if missing_items %}<span class="badge bg-danger ms-1">{{ missing_items|length }}</span>{% endif %}
+                </h6>
+                {% if missing_items %}
+                <p class="text-muted small mb-2">These students haven't paid yet — click <strong>💳 Log</strong> to record a transfer for them directly.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Payment Request</th>
+                                <th>Amount Due</th>
+                                <th>Due Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in missing_items %}
+                            <tr {% if item.payment_request.is_overdue %}class="table-danger"{% endif %}>
+                                <td><strong>{{ item.student.get_full_name|default:item.student.username }}</strong></td>
+                                <td>
+                                    {{ item.payment_request.title }}
+                                    {% if item.payment_request.is_overdue %}
+                                    <span class="badge bg-danger ms-1">Overdue</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ item.payment_request.amount }} CZK</strong></td>
+                                <td class="small">
+                                    {% if item.payment_request.due_date %}
+                                    {% if item.payment_request.is_overdue %}
+                                    <span class="text-danger fw-semibold">{{ item.payment_request.due_date|date:"d.m.Y" }}</span>
+                                    {% else %}
+                                    {{ item.payment_request.due_date|date:"d.m.Y" }}
+                                    {% endif %}
+                                    {% else %}<span class="text-muted">—</span>{% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'log_transaction_prefill' pr_id=item.payment_request.pk student_id=item.student.pk %}" class="btn btn-sm btn-outline-secondary">💳 Log</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted small">✅ All assigned students have paid or submitted payment.</p>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TAB: Expenses ─────────────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-expenses" role="tabpanel">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-bold">💸 Fund Expenses</h5>
+                <a href="{% url 'log_expense' %}" class="btn btn-cfm btn-sm">+ Log Expense</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_expenses %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Amount</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th>Recorded by</th>
+                                <th>Published</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exp in recent_expenses %}
+                            <tr>
+                                <td>
+                                    <strong>{{ exp.title }}</strong>
+                                    {% if exp.description %}
+                                    <br><span class="text-muted small">{{ exp.description|truncatechars:60 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ exp.amount }} CZK</strong></td>
+                                <td><span class="badge bg-secondary">{{ exp.get_category_display }}</span></td>
+                                <td>{{ exp.spent_at|date:"d.m.Y" }}</td>
+                                <td class="small">{{ exp.recorded_by.get_full_name|default:exp.recorded_by.username|default:"—" }}</td>
+                                <td>
+                                    {% if exp.is_published %}
+                                    <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    <a href="{% url 'edit_expense' exp.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit expense">✏</a>
+                                    <form method="post" action="{% url 'delete_expense' exp.pk %}" style="display:inline;"
+                                        onsubmit="return confirm('Delete this expense?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete expense">🗑</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="p-3 mb-0 text-muted">No expenses recorded yet. <a href="{% url 'log_expense' %}">Log the first one →</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

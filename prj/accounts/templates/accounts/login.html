@@ -1,0 +1,36 @@
+{% extends 'core/base.html' %}
+{% block title %}Log In — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-sm-10 col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body p-4">
+                <h1 class="h4 fw-bold mb-4 text-center">🔐 Log In</h1>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Username</label>
+                        <input type="text" id="id_username" name="username" class="form-control" autofocus autocomplete="username" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Password</label>
+                        <input type="password" id="id_password" name="password" class="form-control" autocomplete="current-password" required>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-cfm">Log In</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

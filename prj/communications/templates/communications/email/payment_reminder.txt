@@ -1,0 +1,13 @@
+Hi {{ user.get_full_name|default:user.username }},
+
+This is a friendly reminder that the following payment is outstanding:
+
+  {{ payment_request.title }}
+  Amount: {{ payment_request.amount }} CZK{% if payment_request.due_date %}
+  Due date: {{ payment_request.due_date }}{% endif %}
+
+Please log in to view your payment details and QR code:
+  {{ login_url }}
+
+Thank you,
+Class Fund Manager
