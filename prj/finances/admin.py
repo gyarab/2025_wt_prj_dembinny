@@ -11,9 +11,9 @@ from .models import BankAccount, Expense, PaymentRequest, Transaction
 
 @admin.register(BankAccount)
 class BankAccountAdmin(admin.ModelAdmin):
-    list_display  = ('owner_name', 'account_number', 'school_class', 'is_active', 'updated_at')
+    list_display  = ('owner_name', 'account_number', 'iban', 'bic', 'school_class', 'is_active', 'updated_at')
     list_filter   = ('is_active', 'school_class')
-    search_fields = ('owner_name', 'account_number', 'iban')
+    search_fields = ('owner_name', 'account_number', 'iban', 'bic')
 
 
 @admin.register(PaymentRequest)

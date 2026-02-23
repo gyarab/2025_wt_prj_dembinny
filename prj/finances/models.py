@@ -44,6 +44,12 @@ class BankAccount(models.Model):
         blank=True,
         help_text='IBAN (optional, used in the QR code).',
     )
+    bic = models.CharField(
+        max_length=11,
+        blank=True,
+        verbose_name='BIC / SWIFT',
+        help_text='BIC/SWIFT code (optional, e.g. "GIBACZPX").',
+    )
     bank_name = models.CharField(
         max_length=100,
         blank=True,

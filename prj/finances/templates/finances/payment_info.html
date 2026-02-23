@@ -36,6 +36,14 @@
                     </dd>
                     {% endif %}
 
+                    {% if account.bic %}
+                    <dt class="col-sm-4 text-muted">BIC / SWIFT</dt>
+                    <dd class="col-sm-8">
+                        <span id="bic" class="fw-semibold me-2">{{ account.bic }}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyField('bic', this)">Copy</button>
+                    </dd>
+                    {% endif %}
+
                     {% if account.bank_name %}
                     <dt class="col-sm-4 text-muted">Bank</dt>
                     <dd class="col-sm-8 fw-semibold">{{ account.bank_name }}</dd>
@@ -83,7 +91,7 @@
         <h2 class="h4 fw-bold mb-2">Payment details not yet configured</h2>
         <p class="text-muted">The class treasurer has not set up the bank account details yet. Check back soon!</p>
         {% if user.is_treasurer %}
-        <a href="/admin/finances/bankaccount/add/" class="btn btn-cfm mt-2">Add Bank Account</a>
+        <a href="{% url 'manage_bank_account' %}" class="btn btn-cfm mt-2">Set Up Bank Account</a>
         {% endif %}
     </div>
 </div>

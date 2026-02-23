@@ -17,8 +17,8 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..forms import ExpenseForm, LogTransactionForm, PaymentRequestForm
-from ..models import Expense, PaymentRequest, Transaction
+from ..forms import BankAccountForm, ExpenseForm, LogTransactionForm, PaymentRequestForm
+from ..models import BankAccount, Expense, PaymentRequest, Transaction
 from .utils import (
     get_class_bank_account,
     get_class_payment_requests,
@@ -453,3 +453,41 @@ def delete_expense_view(req, expense_id):
     except Expense.DoesNotExist:
         messages.error(req, 'Expense not found.')
     return redirect('treasurer_dashboard')
+
+
+# ── Manage Bank Account ───────────────────────────────────────────────────────
+
+@treasurer_required
+def manage_bank_account_view(req):
+    """
+    Let the treasurer create or update the bank account details for their class.
+
+    - GET:  Pre-fill the form with the existing BankAccount (if one exists).
+    - POST: Validate and save.  school_class is always stamped from the
+            logged-in user's managed class — the form cannot override it.
+    """
+    school_class = get_treasurer_class(req.user)
+
+    # Get the existing account for this class, or prepare a new one.
+    try:
+        instance = BankAccount.objects.get(school_class=school_class)
+    except BankAccount.DoesNotExist:
+        instance = None
+
+    if req.method == 'POST':
+        form = BankAccountForm(req.POST, instance=instance)
+        if form.is_valid():
+            account = form.save(commit=False)
+            account.school_class = school_class   # always enforce ownership
+            account.save()
+            messages.success(req, '✅ Bank account details saved successfully.')
+            return redirect('treasurer_dashboard')
+        messages.error(req, 'Please fix the errors below.')
+    else:
+        form = BankAccountForm(instance=instance)
+
+    return render(req, 'finances/manage_bank_account.html', {
+        'form':         form,
+        'instance':     instance,
+        'school_class': school_class,
+    })

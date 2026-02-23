@@ -9,7 +9,7 @@ from django import forms
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Expense, PaymentRequest, Transaction
+from .models import BankAccount, Expense, PaymentRequest, Transaction
 
 
 class PaymentRequestForm(forms.ModelForm):
@@ -152,3 +152,52 @@ class ExpenseForm(forms.ModelForm):
         self.fields['spent_at'].input_formats = ['%Y-%m-%d']
         if not self.data.get('spent_at') and not self.instance.pk:
             self.fields['spent_at'].initial = timezone.localdate().strftime('%Y-%m-%d')
+
+
+class BankAccountForm(forms.ModelForm):
+    """
+    Lets a treasurer set up or update their class bank account details.
+    The `school_class` field is intentionally excluded — the view stamps it
+    automatically from the logged-in user's managed class.
+    """
+
+    class Meta:
+        model  = BankAccount
+        fields = [
+            'owner_name', 'account_number', 'iban', 'bic',
+            'bank_name', 'note', 'is_active',
+        ]
+        widgets = {
+            'owner_name':     forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'Class 4.B Fund'",
+            }),
+            'account_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. '123456789/0800'",
+            }),
+            'iban':           forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'CZ6508000000192000145399'",
+            }),
+            'bic':            forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'GIBACZPX'",
+            }),
+            'bank_name':      forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'Česká spořitelna'",
+            }),
+            'note':           forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Any extra instructions for students (optional).',
+            }),
+            'is_active':      forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean_iban(self):
+        return self.cleaned_data.get('iban', '').strip().upper()
+
+    def clean_bic(self):
+        return self.cleaned_data.get('bic', '').strip().upper()
