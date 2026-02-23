@@ -53,14 +53,78 @@ def require_POST_or_405(view_fn):
     return wrapper
 
 
+# ── Class-scoping helpers ─────────────────────────────────────────────────────
+
+def get_treasurer_class(user):
+    """
+    Return the SchoolClass this treasurer manages, or None if they have no
+    class assigned yet.  Always use this to scope treasurer querysets.
+    """
+    from accounts.models import SchoolClass
+    return SchoolClass.objects.filter(teacher=user).first()
+
+
+def get_class_students(school_class):
+    """
+    Return a queryset of active CustomUsers who are enrolled in *school_class*
+    (i.e. have a StudentProfile pointing to that class), ordered for display.
+    Returns an empty queryset when school_class is None.
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    if school_class is None:
+        return User.objects.none()
+    return (
+        User.objects
+        .filter(student_profile__school_class=school_class, is_active=True)
+        .order_by('last_name', 'first_name', 'username')
+    )
+
+
+def get_class_payment_requests(school_class):
+    """
+    Return a queryset of PaymentRequests that belong to *school_class*.
+    Returns an empty queryset when school_class is None.
+    """
+    if school_class is None:
+        return PaymentRequest.objects.none()
+    return PaymentRequest.objects.filter(school_class=school_class)
+
+
+def get_class_bank_account(school_class):
+    """
+    Return the active BankAccount for *school_class*, or None.
+    Falls back to any active account when school_class is None (student views).
+    """
+    if school_class is None:
+        return BankAccount.objects.filter(is_active=True).order_by('-updated_at').first()
+    return BankAccount.objects.filter(
+        school_class=school_class, is_active=True,
+    ).order_by('-updated_at').first()
+
+
 # ── Student payment data ──────────────────────────────────────────────────────
 
 def get_student_payment_data(user):
     """
     Central helper that computes all finance-related querysets and stats
-    for a given student.  Returns a dict passed directly into template context.
+    for a given student.  Scopes payment requests to the student's own class
+    (via StudentProfile) so they never see another class's requests.
+    Returns a dict passed directly into template context.
     """
-    assigned_requests = PaymentRequest.objects.filter(
+    # Determine the student's own class for scoping.
+    school_class = getattr(
+        getattr(user, 'student_profile', None), 'school_class', None
+    )
+
+    # Base queryset: requests from the student's class only.
+    class_requests = (
+        PaymentRequest.objects.filter(school_class=school_class)
+        if school_class is not None
+        else PaymentRequest.objects.none()
+    )
+
+    assigned_requests = class_requests.filter(
         Q(assign_to_all=True) | Q(assigned_to=user)
     ).distinct()
 
@@ -107,6 +171,7 @@ def get_student_payment_data(user):
         'total_owed':        total_owed,
         'total_paid':        total_paid,
         'today':             today,
+        'school_class':      school_class,
     }
 
 
@@ -185,16 +250,24 @@ def attach_qr_to_requests(requests, account):
 
 # ── Treasurer helpers ─────────────────────────────────────────────────────────
 
-def unconfirmed_requests_for_student(student):
+def unconfirmed_requests_for_student(student, school_class=None):
     """
     Return a queryset of PaymentRequests that *student* is assigned to but has
     NOT yet had a CONFIRMED transaction for.
+
+    When *school_class* is given the result is further scoped to that class,
+    ensuring treasurers never see or act on another class's requests.
     """
     confirmed_ids = Transaction.objects.filter(
         student=student,
         status=Transaction.Status.CONFIRMED,
     ).values_list('payment_request_id', flat=True)
 
-    return PaymentRequest.objects.filter(
+    qs = PaymentRequest.objects.filter(
         Q(assign_to_all=True) | Q(assigned_to=student)
-    ).exclude(id__in=confirmed_ids).order_by('title')
+    ).exclude(id__in=confirmed_ids)
+
+    if school_class is not None:
+        qs = qs.filter(school_class=school_class)
+
+    return qs.order_by('title')

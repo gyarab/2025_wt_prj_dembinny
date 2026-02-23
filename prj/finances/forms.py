@@ -51,6 +51,9 @@ class PaymentRequestForm(forms.ModelForm):
 class LogTransactionForm(forms.Form):
     """
     Treasurer form to manually log an incoming bank transfer.
+    Accepts a `student_queryset` kwarg so the view can restrict the student
+    list to its own class.  Accepts a `pr_queryset` kwarg to restrict the
+    payment-request list to the same class.
     """
     from django.contrib.auth import get_user_model
     User = get_user_model()
@@ -79,6 +82,29 @@ class LogTransactionForm(forms.Form):
         required=False, label='Note (optional)',
         widget=forms.Textarea(attrs={'rows': 2, 'placeholder': 'Bank reference, VS/SS, any remark…'}),
     )
+    status = forms.ChoiceField(
+        choices=Transaction.Status.choices,
+        initial=Transaction.Status.CONFIRMED,
+        label='Transaction status',
+    )
+
+    def __init__(self, *args, **kwargs):
+        student_queryset = kwargs.pop('student_queryset', None)
+        pr_queryset      = kwargs.pop('pr_queryset', None)
+        super().__init__(*args, **kwargs)
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        # Use the caller-supplied (class-scoped) queryset if given;
+        # fall back to all active users only as a last resort.
+        self.fields['student'].queryset = (
+            student_queryset
+            if student_queryset is not None
+            else User.objects.filter(is_active=True).order_by('last_name', 'first_name', 'username')
+        )
+        if pr_queryset is not None:
+            self.fields['payment_request'].queryset = pr_queryset
+        if not self.data.get('paid_at'):
+            self.fields['paid_at'].initial = timezone.localtime().strftime('%Y-%m-%dT%H:%M')
     status = forms.ChoiceField(
         choices=Transaction.Status.choices,
         initial=Transaction.Status.CONFIRMED,
