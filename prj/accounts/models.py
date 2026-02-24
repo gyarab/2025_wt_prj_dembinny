@@ -5,7 +5,7 @@ Identity, authentication, and multi-tenancy models.
 
 CustomUser    – extends AbstractUser with an is_treasurer flag and hide_fund_balance preference.
 SchoolClass   – a single class cohort, e.g. "4.B – 2026".
-StudentProfile – the child's record: name, parent FK, unique Variable Symbol.
+StudentProfile – thin enrollment record: links a student user to a class, VS, and optional parent.
 """
 
 from django.contrib.auth.models import AbstractUser
@@ -97,37 +97,42 @@ class SchoolClass(models.Model):
 
 class StudentProfile(models.Model):
     """
-    Stores the child's record inside a class.
+    Thin enrollment record that associates a student (CustomUser) with a class.
 
-    Every student has:
-    - a display name (the child's name, not the login username)
-    - a parent/guardian who is the linked CustomUser account
+    Every student has their own CustomUser account (with first_name, last_name, email, etc.).
+    This model adds the school-specific data:
+    - the SchoolClass they belong to (optional, can be assigned later)
     - a unique Variable Symbol used to match bank transfers automatically
-    - the SchoolClass they belong to
+    - an optional parent/guardian link (another CustomUser)
     """
 
-    school_class = models.ForeignKey(
-        SchoolClass,
-        on_delete=models.CASCADE,
-        related_name='students',
-        help_text='The class this student belongs to.',
-    )
-    parent = models.ForeignKey(
+    user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
-        limit_choices_to={'is_treasurer': False},
-        related_name='children',
-        help_text='The parent/guardian who will receive payment requests and pay.',
+        related_name='student_profile',
+        help_text='The student\'s own user account.',
     )
-    child_name = models.CharField(
-        max_length=200,
-        help_text='Full name of the child (displayed on treasurer dashboards).',
+    school_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='students',
+        help_text='The class this student belongs to.',
     )
     variable_symbol = models.CharField(
         max_length=10,
         unique=True,
         verbose_name='Variable Symbol (VS)',
         help_text='Unique up-to-10-digit code used to identify this student\'s bank transfers.',
+    )
+    parent = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='children',
+        help_text='Optional parent/guardian linked to this student.',
     )
     is_active = models.BooleanField(
         default=True,
@@ -138,7 +143,7 @@ class StudentProfile(models.Model):
     class Meta:
         verbose_name = 'Student Profile'
         verbose_name_plural = 'Student Profiles'
-        ordering = ['school_class', 'child_name']
+        ordering = ['school_class', 'user__last_name', 'user__first_name']
 
     def __str__(self):
-        return f"{self.child_name} ({self.school_class})"
+        return f"{self.user.get_full_name() or self.user.username} ({self.school_class})"

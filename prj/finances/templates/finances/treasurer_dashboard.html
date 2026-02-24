@@ -64,6 +64,9 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-expenses-btn" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">💸 Expenses</button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-bank-btn" data-bs-toggle="tab" data-bs-target="#tab-bank" type="button">🏦 Bank Account</button>
+    </li>
 </ul>
 
 <div class="tab-content" id="dashTabContent">
@@ -384,6 +387,64 @@
                 {% else %}
                 <p class="p-3 mb-0 text-muted">No expenses recorded yet. <a href="{% url 'log_expense' %}">Log the first one →</a></p>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TAB: Bank Account ──────────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-bank" role="tabpanel">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-bold">🏦 Class Bank Account</h5>
+                <a href="{% url 'manage_bank_account' %}" class="btn btn-cfm btn-sm">✏ Edit Bank Account</a>
+            </div>
+            <div class="card-body">
+                {% with account=school_class.bank_account %}
+                {% if account %}
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Account Holder</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ account.owner_name }}</dd>
+
+                    <dt class="col-sm-4 text-muted">Account Number</dt>
+                    <dd class="col-sm-8"><code>{{ account.account_number }}</code></dd>
+
+                    {% if account.iban %}
+                    <dt class="col-sm-4 text-muted">IBAN</dt>
+                    <dd class="col-sm-8"><code>{{ account.iban }}</code></dd>
+                    {% endif %}
+
+                    {% if account.bic %}
+                    <dt class="col-sm-4 text-muted">BIC / SWIFT</dt>
+                    <dd class="col-sm-8"><code>{{ account.bic }}</code></dd>
+                    {% endif %}
+
+                    {% if account.bank_name %}
+                    <dt class="col-sm-4 text-muted">Bank</dt>
+                    <dd class="col-sm-8">{{ account.bank_name }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-4 text-muted">Active</dt>
+                    <dd class="col-sm-8">
+                        {% if account.is_active %}
+                        <span class="badge bg-success">Yes — visible to students</span>
+                        {% else %}
+                        <span class="badge bg-secondary">No — hidden from students</span>
+                        {% endif %}
+                    </dd>
+
+                    {% if account.note %}
+                    <dt class="col-sm-4 text-muted">Note</dt>
+                    <dd class="col-sm-8">{{ account.note|linebreaksbr }}</dd>
+                    {% endif %}
+                </dl>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <div class="fs-2 mb-2">🏦</div>
+                    <p class="mb-3">No bank account configured for this class yet.</p>
+                    <a href="{% url 'manage_bank_account' %}" class="btn btn-cfm">Set Up Bank Account</a>
+                </div>
+                {% endif %}
+                {% endwith %}
             </div>
         </div>
     </div>

@@ -37,7 +37,11 @@ class SchoolClassAdmin(admin.ModelAdmin):
 
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
-    list_display  = ('child_name', 'school_class', 'parent', 'variable_symbol', 'is_active')
+    list_display  = ('user', 'school_class', 'parent', 'variable_symbol', 'is_active')
     list_filter   = ('school_class', 'is_active')
-    search_fields = ('child_name', 'variable_symbol', 'parent__username', 'parent__last_name')
-    raw_id_fields = ('parent',)
+    search_fields = (
+        'user__username', 'user__first_name', 'user__last_name',
+        'variable_symbol',
+        'parent__username', 'parent__last_name',
+    )
+    raw_id_fields = ('user', 'parent')
