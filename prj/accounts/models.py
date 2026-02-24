@@ -13,10 +13,77 @@ SYSTEM_ADMIN  – full platform administrator (maps to Django's is_staff superus
 TREASURER     – class teacher / treasurer; manages the fund for one or more classes.
 STUDENT       – a regular student account; has a StudentProfile.
 PARENT        – parent / guardian account; linked via StudentProfile.parent.
+
+Variable Symbol (VS) generation
+────────────────────────────────
+Every student must have a unique numeric VS used to match incoming bank transfers.
+
+Format: <class_prefix><zero-padded sequence>
+  class_prefix  – 2-digit number stored on SchoolClass (e.g. 01 for "1.A 2026")
+  sequence      – 3-digit auto-increment per class (001, 002, …, 999)
+
+Example: class prefix 04, third student → VS "04003"
+
+If SchoolClass.vs_prefix is blank (legacy / un-assigned), a fallback of 6 random
+digits is used so uniqueness is always guaranteed.
 """
 
+import random
+import string
+
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+
+# ── VS helpers ────────────────────────────────────────────────────────────────
+
+VS_VALIDATOR = RegexValidator(
+    regex=r'^\d{1,10}$',
+    message='Variable Symbol must be 1–10 digits.',
+)
+
+
+def _next_vs_for_class(school_class: 'SchoolClass') -> str:
+    """
+    Return the next available VS for *school_class*.
+
+    Format: <2-digit prefix><3-digit sequence>  → e.g. "04003"
+    Falls back to 6 random digits when no prefix is set.
+    """
+    prefix = (school_class.vs_prefix or '').strip()
+
+    if prefix:
+        # Find the highest existing sequence number in this class
+        existing = (
+            StudentProfile.objects
+            .filter(school_class=school_class)
+            .exclude(variable_symbol='')
+            .values_list('variable_symbol', flat=True)
+        )
+        max_seq = 0
+        for vs in existing:
+            # Strip the prefix and parse the remainder as an integer
+            if vs.startswith(prefix):
+                try:
+                    max_seq = max(max_seq, int(vs[len(prefix):]))
+                except ValueError:
+                    pass
+        seq = max_seq + 1
+        candidate = f"{prefix}{seq:03d}"
+    else:
+        # No prefix configured – generate a random 6-digit VS
+        candidate = ''.join(random.choices(string.digits, k=6))
+
+    # Safety: keep incrementing / re-rolling until we get a globally unique value
+    while StudentProfile.objects.filter(variable_symbol=candidate).exists():
+        if prefix:
+            seq += 1
+            candidate = f"{prefix}{seq:03d}"
+        else:
+            candidate = ''.join(random.choices(string.digits, k=6))
+
+    return candidate
 
 
 class CustomUser(AbstractUser):
@@ -101,6 +168,10 @@ class SchoolClass(models.Model):
 
     A teacher can manage multiple classes; each class has exactly one
     linked BankAccount (defined in the finances app).
+
+    vs_prefix – 2-digit string used as the leading part of auto-generated
+                Variable Symbols for students in this class (e.g. "04").
+                Leave blank to use random 6-digit fallback VS values.
     """
 
     name = models.CharField(
@@ -122,6 +193,19 @@ class SchoolClass(models.Model):
         blank=True,
         help_text='Optional school year label, e.g. "2025/2026".',
     )
+    vs_prefix = models.CharField(
+        max_length=2,
+        blank=True,
+        verbose_name='VS Prefix',
+        help_text=(
+            '2-digit numeric prefix for auto-generated Variable Symbols in this class '
+            '(e.g. "04" → students get VS 04001, 04002 …). '
+            'Leave blank to use random 6-digit fallback values.'
+        ),
+        validators=[
+            RegexValidator(r'^\d{0,2}$', 'VS Prefix must be 0–2 digits.')
+        ],
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -140,8 +224,14 @@ class StudentProfile(models.Model):
     Every student has their own CustomUser account (with first_name, last_name, email, etc.).
     This model adds the school-specific data:
     - the SchoolClass they belong to (optional, can be assigned later)
-    - a unique Variable Symbol used to match bank transfers automatically
+    - a unique Variable Symbol (VS) used to match bank transfers automatically
     - an optional parent/guardian link (another CustomUser)
+
+    VS auto-generation
+    ──────────────────
+    When a StudentProfile is created (or saved with an empty variable_symbol),
+    ``save()`` calls ``_next_vs_for_class()`` to generate a unique numeric VS.
+    A VS can also be set manually; it will be validated as 1–10 digits.
     """
 
     user = models.OneToOneField(
@@ -161,8 +251,13 @@ class StudentProfile(models.Model):
     variable_symbol = models.CharField(
         max_length=10,
         unique=True,
+        blank=True,          # blank allowed so save() can auto-fill it
         verbose_name='Variable Symbol (VS)',
-        help_text='Unique up-to-10-digit code used to identify this student\'s bank transfers.',
+        help_text=(
+            'Unique 1–10-digit code used to match this student\'s bank transfers. '
+            'Leave blank to auto-generate from the class VS prefix.'
+        ),
+        validators=[VS_VALIDATOR],
     )
     parent = models.ForeignKey(
         CustomUser,
@@ -178,10 +273,37 @@ class StudentProfile(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ── Auto VS generation ────────────────────────────────────────────────────
+
+    def save(self, *args, **kwargs):
+        """Auto-generate a Variable Symbol if one is not already set."""
+        if not self.variable_symbol:
+            if self.school_class_id:
+                # school_class may not be loaded yet — fetch it
+                sc = self.school_class if self.school_class else SchoolClass.objects.get(pk=self.school_class_id)
+                self.variable_symbol = _next_vs_for_class(sc)
+            else:
+                # No class yet: generate a random 6-digit placeholder
+                candidate = ''.join(random.choices(string.digits, k=6))
+                while StudentProfile.objects.filter(variable_symbol=candidate).exists():
+                    candidate = ''.join(random.choices(string.digits, k=6))
+                self.variable_symbol = candidate
+        super().save(*args, **kwargs)
+
+    def regenerate_vs(self) -> str:
+        """
+        Force-regenerate the Variable Symbol (even if one already exists).
+        Saves the instance and returns the new VS.
+        Call this after assigning a student to a class.
+        """
+        self.variable_symbol = ''
+        self.save()
+        return self.variable_symbol
+
     class Meta:
         verbose_name = 'Student Profile'
         verbose_name_plural = 'Student Profiles'
         ordering = ['school_class', 'user__last_name', 'user__first_name']
 
     def __str__(self):
-        return f"{self.user.get_full_name() or self.user.username} ({self.school_class})"
+        return f"{self.user.get_full_name() or self.user.username} ({self.school_class}) VS:{self.variable_symbol}"

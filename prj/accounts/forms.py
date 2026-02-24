@@ -17,7 +17,11 @@ class StudentCSVImportForm(forms.Form):
     Upload a CSV file to bulk-create StudentProfile records for a class.
 
     Expected CSV columns (header row required):
-        username, first_name, last_name, variable_symbol[, parent_email, parent_first_name, parent_last_name]
+        username, first_name, last_name[, variable_symbol, parent_email, parent_first_name, parent_last_name]
+
+    ``variable_symbol`` is **optional** – if omitted or empty the VS will be
+    auto-generated from the class VS prefix (see SchoolClass.vs_prefix and
+    StudentProfile.save()).
 
     For each row the importer will:
     1. Get-or-create a CustomUser (student, role=STUDENT) using username.
@@ -32,8 +36,11 @@ class StudentCSVImportForm(forms.Form):
     )
     csv_file = forms.FileField(
         label='CSV file',
-        help_text='Must contain columns: username, first_name, last_name, variable_symbol '
-                  '(optional: parent_email, parent_first_name, parent_last_name)',
+        help_text=(
+            'Required columns: username, first_name, last_name. '
+            'Optional columns: variable_symbol (auto-generated if absent), '
+            'parent_email, parent_first_name, parent_last_name.'
+        ),
     )
 
     def clean_csv_file(self):
@@ -41,7 +48,7 @@ class StudentCSVImportForm(forms.Form):
         try:
             text = f.read().decode('utf-8-sig')   # handle Excel BOM
             reader = csv.DictReader(io.StringIO(text))
-            required = {'username', 'first_name', 'last_name', 'variable_symbol'}
+            required = {'username', 'first_name', 'last_name'}
             if not required.issubset(set(reader.fieldnames or [])):
                 raise forms.ValidationError(
                     f'CSV is missing required columns: {required - set(reader.fieldnames or [])}'

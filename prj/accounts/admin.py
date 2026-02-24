@@ -60,15 +60,16 @@ def _sync_user_group(user: CustomUser) -> None:
 
 @admin.register(SchoolClass)
 class SchoolClassAdmin(admin.ModelAdmin):
-    list_display  = ('name', 'teacher', 'school_year', 'created_at')
+    list_display  = ('name', 'teacher', 'school_year', 'vs_prefix', 'created_at')
     list_filter   = ('school_year',)
     search_fields = ('name', 'teacher__username', 'teacher__last_name')
     raw_id_fields = ('teacher',)
+    fields        = ('name', 'teacher', 'school_year', 'vs_prefix')
 
 
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
-    list_display  = ('user', 'school_class', 'parent', 'variable_symbol', 'is_active')
+    list_display  = ('user', 'school_class', 'variable_symbol', 'parent', 'is_active')
     list_filter   = ('school_class', 'is_active')
     search_fields = (
         'user__username', 'user__first_name', 'user__last_name',
@@ -76,3 +77,13 @@ class StudentProfileAdmin(admin.ModelAdmin):
         'parent__username', 'parent__last_name',
     )
     raw_id_fields = ('user', 'parent')
+    readonly_fields = ('variable_symbol',)
+    actions = ['regenerate_variable_symbols']
+
+    @admin.action(description='🔄 Regenerate Variable Symbol for selected students')
+    def regenerate_variable_symbols(self, request, queryset):
+        count = 0
+        for profile in queryset:
+            profile.regenerate_vs()
+            count += 1
+        self.message_user(request, f'Regenerated VS for {count} student(s).')
