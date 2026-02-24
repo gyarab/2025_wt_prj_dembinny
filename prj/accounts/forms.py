@@ -20,8 +20,8 @@ class StudentCSVImportForm(forms.Form):
         username, first_name, last_name, variable_symbol[, parent_email, parent_first_name, parent_last_name]
 
     For each row the importer will:
-    1. Get-or-create a CustomUser (student) using username.
-    2. Optionally get-or-create a parent CustomUser using parent_email.
+    1. Get-or-create a CustomUser (student, role=STUDENT) using username.
+    2. Optionally get-or-create a parent CustomUser (role=PARENT) using parent_email.
     3. Create a StudentProfile linking the student user to the chosen class.
     """
 
@@ -52,3 +52,4 @@ class StudentCSVImportForm(forms.Form):
             return rows
         except UnicodeDecodeError:
             raise forms.ValidationError('File must be UTF-8 encoded.')
+

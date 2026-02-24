@@ -31,12 +31,14 @@ def treasurer_required(view_fn):
     """
     Decorator: unauthenticated users → login, non-treasurers → dashboard
     with an error message.
+
+    System Admins are also granted treasurer-level access.
     """
     @wraps(view_fn)
     def wrapper(req, *args, **kwargs):
         if not req.user.is_authenticated:
             return redirect('login')
-        if not req.user.is_treasurer:
+        if not (req.user.is_treasurer or req.user.is_system_admin or req.user.is_superuser):
             messages.error(req, 'Access denied – treasurer only.')
             return redirect('dashboard')
         return view_fn(req, *args, **kwargs)

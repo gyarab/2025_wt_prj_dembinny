@@ -3,9 +3,16 @@ accounts/models.py
 ──────────────────
 Identity, authentication, and multi-tenancy models.
 
-CustomUser    – extends AbstractUser with an is_treasurer flag and hide_fund_balance preference.
+CustomUser    – extends AbstractUser with a role field and hide_fund_balance preference.
 SchoolClass   – a single class cohort, e.g. "4.B – 2026".
 StudentProfile – thin enrollment record: links a student user to a class, VS, and optional parent.
+
+Roles
+─────
+SYSTEM_ADMIN  – full platform administrator (maps to Django's is_staff superuser).
+TREASURER     – class teacher / treasurer; manages the fund for one or more classes.
+STUDENT       – a regular student account; has a StudentProfile.
+PARENT        – parent / guardian account; linked via StudentProfile.parent.
 """
 
 from django.contrib.auth.models import AbstractUser
@@ -16,15 +23,25 @@ class CustomUser(AbstractUser):
     """
     Custom user model for Class Fund Manager.
 
-    is_treasurer=True  → the class teacher/treasurer who manages the fund.
-    is_treasurer=False → a regular student / parent account.
+    Four roles distinguish what a user can see and do:
+        SYSTEM_ADMIN  – platform admin, full access.
+        TREASURER     – class treasurer / teacher, manages a class fund.
+        STUDENT       – enrolled student, read-only view of own data.
+        PARENT        – parent / guardian, read-only view of their child's data.
     """
 
-    is_treasurer = models.BooleanField(
-        default=False,
-        verbose_name='Treasurer',
-        help_text='Designates whether this user is the class treasurer '
-                  'with administrative privileges over the fund.',
+    class Role(models.TextChoices):
+        SYSTEM_ADMIN = 'system_admin', 'System Admin'
+        TREASURER    = 'treasurer',    'Class Treasurer / Teacher'
+        STUDENT      = 'student',      'Student'
+        PARENT       = 'parent',       'Parent'
+
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.STUDENT,
+        verbose_name='Role',
+        help_text='Determines what this user can see and do in the application.',
     )
     hide_fund_balance = models.BooleanField(
         default=False,
@@ -48,9 +65,30 @@ class CustomUser(AbstractUser):
         verbose_name='user permissions',
     )
 
+    # ── Convenience properties ────────────────────────────────────────────────
+
+    @property
+    def is_system_admin(self) -> bool:
+        """True for System Admin role users."""
+        return self.role == self.Role.SYSTEM_ADMIN
+
+    @property
+    def is_treasurer(self) -> bool:
+        """True for Class Treasurer / Teacher role users."""
+        return self.role == self.Role.TREASURER
+
+    @property
+    def is_student(self) -> bool:
+        """True for Student role users."""
+        return self.role == self.Role.STUDENT
+
+    @property
+    def is_parent(self) -> bool:
+        """True for Parent role users."""
+        return self.role == self.Role.PARENT
+
     def __str__(self):
-        role = 'Treasurer' if self.is_treasurer else 'Student'
-        return f"{self.get_full_name() or self.username} ({role})"
+        return f"{self.get_full_name() or self.username} ({self.get_role_display()})"
 
     class Meta:
         verbose_name = 'User'
@@ -75,7 +113,7 @@ class SchoolClass(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        limit_choices_to={'is_treasurer': True},
+        limit_choices_to={'role': CustomUser.Role.TREASURER},
         related_name='managed_classes',
         help_text='The teacher/treasurer responsible for this class.',
     )

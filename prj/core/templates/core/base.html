@@ -24,7 +24,7 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
                     {% if user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
-                    {% if user.is_treasurer %}
+                    {% if user.is_treasurer or user.is_system_admin %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'treasurer_dashboard' %}">⚙ Treasurer</a></li>
                     {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'budget' %}">📊 Budget</a></li>
@@ -35,7 +35,16 @@
                     {% if user.is_authenticated %}
                     <li class="nav-item">
                         <span class="navbar-text me-2 text-cfm-gold fw-semibold">
-                            {{ user.get_full_name|default:user.username }}{% if user.is_treasurer %} <span class="badge bg-cfm-gold text-dark ms-1" style="font-size:.65rem;">Treasurer</span>{% endif %}
+                            {{ user.get_full_name|default:user.username }}
+                            {% if user.is_system_admin %}
+                            <span class="badge bg-danger text-white ms-1" style="font-size:.65rem;">Admin</span>
+                            {% elif user.is_treasurer %}
+                            <span class="badge bg-cfm-gold text-dark ms-1" style="font-size:.65rem;">Treasurer</span>
+                            {% elif user.is_parent %}
+                            <span class="badge bg-info text-dark ms-1" style="font-size:.65rem;">Parent</span>
+                            {% else %}
+                            <span class="badge bg-secondary text-white ms-1" style="font-size:.65rem;">Student</span>
+                            {% endif %}
                         </span>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'password_change' %}">Change Password</a></li>

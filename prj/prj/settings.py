@@ -28,6 +28,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://two025-wt-prj-dembinny.onrender.com',
 ]
 
+
 # ── Application definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
