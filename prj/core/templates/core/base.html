@@ -28,6 +28,7 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'treasurer_dashboard' %}">&#9881; Treasurer</a></li>
                     {% endif %}
                     {% if user.is_system_admin %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'admin_panel' %}">&#9881; Admin Panel</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'importer:upload' %}">&#128229; Import</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'importer:batch_list' %}">&#128193; Import History</a></li>
                     {% endif %}
