@@ -28,6 +28,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://two025-wt-prj-dembinny.onrender.com',
 ]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 # ── Application definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [

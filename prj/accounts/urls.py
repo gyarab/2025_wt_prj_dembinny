@@ -21,6 +21,19 @@ urlpatterns = [
     path('admin-panel/',
          views_admin.admin_panel_view,
          name='admin_panel'),
+
+    # Fund Groups
+    path('admin-panel/groups/create/',
+         views_admin.fund_group_create_view,
+         name='fund_group_create'),
+    path('admin-panel/groups/<int:group_id>/edit/',
+         views_admin.fund_group_edit_view,
+         name='fund_group_edit'),
+    path('admin-panel/groups/<int:group_id>/delete/',
+         views_admin.fund_group_delete_view,
+         name='fund_group_delete'),
+
+    # Memberships
     path('admin-panel/memberships/add/',
          views_admin.membership_create_view,
          name='membership_create'),

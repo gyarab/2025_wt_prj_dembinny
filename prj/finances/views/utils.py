@@ -119,7 +119,6 @@ def get_treasurer_membership(user, school_class):
 
 class _AdminMembership:
     """Sentinel object granting all ClassMembership permissions to admins."""
-    tier = 'full'
 
     @property
     def can_log_expenses(self):
@@ -127,6 +126,14 @@ class _AdminMembership:
 
     @property
     def can_manage_payment_requests(self):
+        return True
+
+    @property
+    def can_view_bank_account(self):
+        return True
+
+    @property
+    def can_manage_students(self):
         return True
 
 

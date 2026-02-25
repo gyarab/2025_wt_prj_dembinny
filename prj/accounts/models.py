@@ -5,7 +5,8 @@ Identity, authentication, and multi-tenancy models.
 
 CustomUser      – extends AbstractUser with a role field and hide_fund_balance preference.
 SchoolClass     – a single class cohort, e.g. "4.B – 2026".
-ClassMembership – links a treasurer-role user to a class with a specific permission tier.
+FundGroup       – named permission group created per class by the admin (replaces hardcoded tiers).
+ClassMembership – links a treasurer-role user to a class via a FundGroup.
 StudentProfile  – thin enrollment record: links a student user to a class, VS, and optional parent.
 
 Roles
@@ -17,14 +18,15 @@ TREASURER_BOOKKEEPER – limited tier: can only log expenses (read-only on payme
 STUDENT              – a regular student account; has a StudentProfile.
 PARENT               – parent / guardian account; linked via StudentProfile.parent.
 
-ClassMembership permission tiers
-─────────────────────────────────
-A SchoolClass can have multiple treasurer-role users via ClassMembership.
-The ``tier`` field on ClassMembership determines per-class capabilities:
+FundGroup permission flags
+──────────────────────────
+Instead of hardcoded tiers, the admin creates custom groups per class with individual
+boolean permission checkboxes:
 
-  FULL        – all current and future treasurer actions.
-  ACCOUNTANT  – expenses + payment requests (no student import, no admin).
-  BOOKKEEPER  – expenses only (cannot create payment requests).
+  can_log_expenses             – log new expense records
+  can_manage_payment_requests  – create / edit / confirm payment requests
+  can_view_bank_account        – see the bank account tab and settings
+  can_manage_students          – add / remove / edit student profiles
 
 Variable Symbol (VS) generation
 ────────────────────────────────
@@ -281,25 +283,93 @@ class SchoolClass(models.Model):
         return self.name
 
 
+class FundGroup(models.Model):
+    """
+    A named permission group defined per class by a System Admin.
+
+    Instead of the fixed Full / Accountant / Bookkeeper tiers, the admin can
+    create as many groups as they like (e.g. "Accountant", "Read-only auditor",
+    "Field-trip coordinator") and tick exactly which fund actions each group is
+    allowed to perform.
+
+    Permission flags
+    ────────────────
+    can_log_expenses            – may add expense records
+    can_manage_payment_requests – may create / approve / confirm payment requests
+    can_view_bank_account       – may see and edit the class bank account settings
+    can_manage_students         – may add / edit / remove student profiles
+    """
+
+    school_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.CASCADE,
+        related_name='fund_groups',
+        help_text='The class this group belongs to.',
+    )
+    name = models.CharField(
+        max_length=100,
+        help_text='Short, descriptive group name shown in the admin panel and navbar.',
+    )
+
+    # ── Permission flags ──────────────────────────────────────────────────────
+    can_log_expenses = models.BooleanField(
+        default=True,
+        verbose_name='Log expenses',
+        help_text='Members may add new expense records.',
+    )
+    can_manage_payment_requests = models.BooleanField(
+        default=False,
+        verbose_name='Manage payment requests',
+        help_text='Members may create, edit, and confirm payment requests.',
+    )
+    can_view_bank_account = models.BooleanField(
+        default=False,
+        verbose_name='View / edit bank account',
+        help_text='Members may see and update the class bank account details.',
+    )
+    can_manage_students = models.BooleanField(
+        default=False,
+        verbose_name='Manage students',
+        help_text='Members may add, edit, or remove student profiles.',
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Fund Group'
+        verbose_name_plural = 'Fund Groups'
+        unique_together = [('school_class', 'name')]
+        ordering = ['school_class', 'name']
+
+    def __str__(self):
+        return f"{self.school_class} › {self.name}"
+
+    @property
+    def permission_summary(self) -> str:
+        """Human-readable one-liner of granted permissions."""
+        parts = []
+        if self.can_log_expenses:
+            parts.append('Expenses')
+        if self.can_manage_payment_requests:
+            parts.append('Payment Requests')
+        if self.can_view_bank_account:
+            parts.append('Bank Account')
+        if self.can_manage_students:
+            parts.append('Students')
+        return ', '.join(parts) if parts else 'No permissions'
+
+
 class ClassMembership(models.Model):
     """
-    Links a treasurer-role user to a SchoolClass with a specific permission tier.
+    Links a treasurer-role user to a SchoolClass via a FundGroup.
 
-    This replaces the single ``SchoolClass.teacher`` FK for multi-treasurer
-    scenarios.  A class can have any number of members, each with their own tier:
+    The FundGroup defines exactly what actions the member may perform.
+    A class can have any number of memberships, each pointing to a different
+    FundGroup (or even the same group for users with identical permissions).
 
-        FULL        – all treasurer actions (expenses, payment requests, future).
-        ACCOUNTANT  – expenses + payment requests.
-        BOOKKEEPER  – expenses only.
-
-    The ``SchoolClass.teacher`` FK is kept as the *primary contact* (shown in
-    lists, admin, etc.) but access is governed by ClassMembership rows.
+    The ``SchoolClass.teacher`` FK is kept as the *primary contact* but access
+    is governed by ClassMembership + FundGroup rows.
     """
-
-    class Tier(models.TextChoices):
-        FULL        = 'full',        'Full (all permissions)'
-        ACCOUNTANT  = 'accountant',  'Accountant (expenses + payment requests)'
-        BOOKKEEPER  = 'bookkeeper',  'Bookkeeper (expenses only)'
 
     school_class = models.ForeignKey(
         SchoolClass,
@@ -319,11 +389,13 @@ class ClassMembership(models.Model):
         ]},
         help_text='Treasurer who has access to this class.',
     )
-    tier = models.CharField(
-        max_length=20,
-        choices=Tier.choices,
-        default=Tier.FULL,
-        help_text='What this member is allowed to do in this class.',
+    fund_group = models.ForeignKey(
+        FundGroup,
+        on_delete=models.PROTECT,
+        related_name='memberships',
+        null=True,
+        blank=True,
+        help_text='The permission group that defines what this member can do.',
     )
     joined_at = models.DateTimeField(auto_now_add=True)
 
@@ -331,22 +403,41 @@ class ClassMembership(models.Model):
         verbose_name = 'Class Membership'
         verbose_name_plural = 'Class Memberships'
         unique_together = [('school_class', 'user')]
-        ordering = ['school_class', 'tier', 'user__last_name']
+        ordering = ['school_class', 'user__last_name']
 
     def __str__(self):
-        return f"{self.user} → {self.school_class} [{self.get_tier_display()}]"
+        group_label = self.fund_group.name if self.fund_group else 'No group'
+        return f"{self.user} → {self.school_class} [{group_label}]"
 
-    # ── Tier capability helpers ───────────────────────────────────────────────
+    # ── Permission delegation ─────────────────────────────────────────────────
 
     @property
     def can_log_expenses(self) -> bool:
-        """All tiers can log expenses."""
+        """Delegate to FundGroup; default True when no group assigned."""
+        if self.fund_group_id:
+            return self.fund_group.can_log_expenses
         return True
 
     @property
     def can_manage_payment_requests(self) -> bool:
-        """Accountant and Full tiers can create/edit payment requests."""
-        return self.tier in {self.Tier.FULL, self.Tier.ACCOUNTANT}
+        """Delegate to FundGroup; default False when no group assigned."""
+        if self.fund_group_id:
+            return self.fund_group.can_manage_payment_requests
+        return False
+
+    @property
+    def can_view_bank_account(self) -> bool:
+        """Delegate to FundGroup; default False when no group assigned."""
+        if self.fund_group_id:
+            return self.fund_group.can_view_bank_account
+        return False
+
+    @property
+    def can_manage_students(self) -> bool:
+        """Delegate to FundGroup; default False when no group assigned."""
+        if self.fund_group_id:
+            return self.fund_group.can_manage_students
+        return False
 
 
 class StudentProfile(models.Model):

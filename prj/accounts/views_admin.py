@@ -1,16 +1,18 @@
 """
 accounts/views_admin.py
 ───────────────────────
-System-Admin-only management views for Classes and ClassMemberships.
+System-Admin-only management views for Classes, FundGroups, and ClassMemberships.
 
-URL namespace: these views are wired under /admin-panel/ in accounts/urls.py
-and protected by @admin_required.
+All views are protected by @admin_required.
 
 Views
 ─────
-admin_panel_view          – overview: list of all classes + their members
-membership_create_view    – create a new ClassMembership
-membership_edit_view      – edit an existing ClassMembership's tier
+admin_panel_view          – overview: all classes + their groups and members
+fund_group_create_view    – create a new FundGroup for a class
+fund_group_edit_view      – edit an existing FundGroup's name / permissions
+fund_group_delete_view    – remove a FundGroup (POST-only; blocked if members assigned)
+membership_create_view    – assign a treasurer to a class in a FundGroup
+membership_edit_view      – change which FundGroup a membership belongs to
 membership_delete_view    – remove a ClassMembership (POST-only)
 """
 
@@ -18,8 +20,8 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .decorators import admin_required
-from .forms_admin import ClassMembershipForm
-from .models import ClassMembership, SchoolClass
+from .forms_admin import ClassMembershipForm, FundGroupForm
+from .models import ClassMembership, FundGroup, SchoolClass
 
 
 # ── Overview ──────────────────────────────────────────────────────────────────
@@ -28,91 +30,174 @@ from .models import ClassMembership, SchoolClass
 def admin_panel_view(req):
     """
     Main admin panel page.
-    Lists every SchoolClass with its current ClassMembership entries so the
-    admin can see who has access to what at a glance.
+    Lists every SchoolClass with its FundGroups and ClassMembership entries.
     """
     classes = (
         SchoolClass.objects
-        .prefetch_related('memberships__user')
+        .prefetch_related('fund_groups__memberships__user', 'memberships__user',
+                          'memberships__fund_group')
         .select_related('teacher')
         .order_by('name')
     )
-    return render(req, 'accounts/admin_panel.html', {
-        'classes':    classes,
-        'tier_choices': ClassMembership.Tier.choices,
-    })
+    return render(req, 'accounts/admin_panel.html', {'classes': classes})
 
 
-# ── Create membership ─────────────────────────────────────────────────────────
+# ── FundGroup CRUD ────────────────────────────────────────────────────────────
 
 @admin_required
-def membership_create_view(req):
+def fund_group_create_view(req):
     """
-    GET  → show the blank form (optionally pre-fill school_class from ?class=<pk>).
-    POST → validate and create the ClassMembership.
+    GET  → show blank FundGroup form (optionally pre-filled from ?class=<pk>).
+    POST → validate and create the FundGroup.
     """
-    initial = {}
-    if req.method == 'GET' and req.GET.get('class'):
+    school_class = None
+    if req.GET.get('class') or req.POST.get('school_class'):
+        pk = req.POST.get('school_class') or req.GET.get('class')
         try:
-            initial['school_class'] = SchoolClass.objects.get(pk=int(req.GET['class']))
+            school_class = SchoolClass.objects.get(pk=int(pk))
         except (SchoolClass.DoesNotExist, ValueError):
             pass
 
     if req.method == 'POST':
-        form = ClassMembershipForm(req.POST)
+        form = FundGroupForm(req.POST, school_class=school_class)
+        if form.is_valid():
+            group = form.save()
+            messages.success(req, f'✅ Group "{group.name}" created for {group.school_class}.')
+            return redirect('admin_panel')
+        messages.error(req, 'Please fix the errors below.')
+    else:
+        form = FundGroupForm(school_class=school_class)
+
+    return render(req, 'accounts/fund_group_form.html', {
+        'form':         form,
+        'school_class': school_class,
+        'title':        'Create Permission Group',
+        'submit_label': 'Create Group',
+    })
+
+
+@admin_required
+def fund_group_edit_view(req, group_id):
+    """
+    GET  → pre-filled form for an existing FundGroup.
+    POST → update name and permission flags.
+    """
+    group = get_object_or_404(FundGroup, pk=group_id)
+
+    if req.method == 'POST':
+        form = FundGroupForm(req.POST, instance=group, school_class=group.school_class)
+        if form.is_valid():
+            form.save()
+            messages.success(req, f'✅ Group "{group.name}" updated.')
+            return redirect('admin_panel')
+        messages.error(req, 'Please fix the errors below.')
+    else:
+        form = FundGroupForm(instance=group, school_class=group.school_class)
+
+    return render(req, 'accounts/fund_group_form.html', {
+        'form':         form,
+        'group':        group,
+        'school_class': group.school_class,
+        'title':        f'Edit Group — {group.name}',
+        'submit_label': 'Save Changes',
+    })
+
+
+@admin_required
+def fund_group_delete_view(req, group_id):
+    """POST-only: remove a FundGroup if no memberships are using it."""
+    if req.method != 'POST':
+        return redirect('admin_panel')
+
+    group = get_object_or_404(FundGroup, pk=group_id)
+
+    if group.memberships.exists():
+        count = group.memberships.count()
+        messages.error(
+            req,
+            f'Cannot delete "{group.name}" — {count} member(s) still assigned to it. '
+            f'Move or remove them first.'
+        )
+        return redirect('admin_panel')
+
+    name  = group.name
+    klass = str(group.school_class)
+    group.delete()
+    messages.success(req, f'🗑 Deleted group "{name}" from {klass}.')
+    return redirect('admin_panel')
+
+
+# ── ClassMembership CRUD ──────────────────────────────────────────────────────
+
+@admin_required
+def membership_create_view(req):
+    """
+    GET  → show blank membership form (optionally pre-fill class from ?class=<pk>).
+    POST → validate and create the ClassMembership.
+    """
+    school_class = None
+    if req.GET.get('class') or req.POST.get('school_class'):
+        pk = req.POST.get('school_class') or req.GET.get('class')
+        try:
+            school_class = SchoolClass.objects.get(pk=int(pk))
+        except (SchoolClass.DoesNotExist, ValueError):
+            pass
+
+    if req.method == 'POST':
+        form = ClassMembershipForm(req.POST, school_class=school_class)
         if form.is_valid():
             membership = form.save()
             messages.success(
                 req,
                 f'✅ {membership.user.get_full_name() or membership.user.username} '
-                f'added to {membership.school_class} as '
-                f'{membership.get_tier_display()}.'
+                f'added to {membership.school_class}'
+                + (f' as {membership.fund_group.name}.' if membership.fund_group else '.')
             )
             return redirect('admin_panel')
         messages.error(req, 'Please fix the errors below.')
     else:
-        form = ClassMembershipForm(initial=initial)
+        form = ClassMembershipForm(school_class=school_class)
 
     return render(req, 'accounts/membership_form.html', {
-        'form':  form,
-        'title': 'Add Class Member',
+        'form':         form,
+        'school_class': school_class,
+        'title':        'Add Class Member',
         'submit_label': 'Add Member',
     })
 
-
-# ── Edit membership ───────────────────────────────────────────────────────────
 
 @admin_required
 def membership_edit_view(req, membership_id):
     """
     GET  → pre-filled form for an existing ClassMembership.
-    POST → update the tier (school_class and user are read-only after creation).
+    POST → update the fund_group (class and user are read-only after creation).
     """
     membership = get_object_or_404(ClassMembership, pk=membership_id)
 
     if req.method == 'POST':
-        form = ClassMembershipForm(req.POST, instance=membership)
+        form = ClassMembershipForm(req.POST, instance=membership,
+                                   school_class=membership.school_class)
         if form.is_valid():
             form.save()
             messages.success(
                 req,
                 f'✅ Updated: {membership.user.get_full_name() or membership.user.username} '
-                f'in {membership.school_class} → {membership.get_tier_display()}.'
+                f'in {membership.school_class}'
+                + (f' → {membership.fund_group.name}.' if membership.fund_group else '.')
             )
             return redirect('admin_panel')
         messages.error(req, 'Please fix the errors below.')
     else:
-        form = ClassMembershipForm(instance=membership)
+        form = ClassMembershipForm(instance=membership, school_class=membership.school_class)
 
     return render(req, 'accounts/membership_form.html', {
-        'form':       form,
-        'membership': membership,
-        'title':      'Edit Class Membership',
+        'form':         form,
+        'membership':   membership,
+        'school_class': membership.school_class,
+        'title':        'Edit Class Membership',
         'submit_label': 'Save Changes',
     })
 
-
-# ── Delete membership ─────────────────────────────────────────────────────────
 
 @admin_required
 def membership_delete_view(req, membership_id):

@@ -45,12 +45,10 @@
             </div>
             {% endif %}
 
-            <!-- Tier visual helper -->
+            <!-- Group info hint -->
             <div class="alert alert-light border mt-2 mb-3" style="font-size:.875rem;">
-                <strong>&#8505; Tier capabilities:</strong><br>
-                <span class="badge bg-success me-1">Full</span> Log expenses &nbsp;+&nbsp; Payment requests &nbsp;+&nbsp; Bank account settings<br>
-                <span class="badge bg-primary me-1">Accountant</span> Log expenses &nbsp;+&nbsp; Payment requests<br>
-                <span class="badge bg-secondary me-1">Bookkeeper</span> Log expenses only
+                &#8505; Permission groups are created per class. If no groups exist yet for this class,
+                <a href="{% url 'fund_group_create' %}{% if school_class %}?class={{ school_class.pk }}{% endif %}">create one first</a>.
             </div>
 
             <div class="d-flex gap-2">

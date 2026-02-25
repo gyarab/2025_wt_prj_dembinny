@@ -12,7 +12,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 
-from .models import ClassMembership, CustomUser, SchoolClass, StudentProfile
+from .models import ClassMembership, CustomUser, FundGroup, SchoolClass, StudentProfile
 
 # Mapping from role value → group name (must match apps.py _create_default_groups)
 ROLE_GROUP_MAP = {
@@ -63,8 +63,15 @@ class ClassMembershipInline(admin.TabularInline):
     model = ClassMembership
     extra = 1
     raw_id_fields = ('user',)
-    fields = ('user', 'tier', 'joined_at')
+    fields = ('user', 'fund_group', 'joined_at')
     readonly_fields = ('joined_at',)
+
+
+class FundGroupInline(admin.TabularInline):
+    model = FundGroup
+    extra = 1
+    fields = ('name', 'can_log_expenses', 'can_manage_payment_requests',
+              'can_view_bank_account', 'can_manage_students')
 
 
 @admin.register(SchoolClass)
@@ -74,7 +81,21 @@ class SchoolClassAdmin(admin.ModelAdmin):
     search_fields = ('name', 'teacher__username', 'teacher__last_name')
     raw_id_fields = ('teacher',)
     fields        = ('name', 'teacher', 'school_year', 'vs_prefix')
-    inlines       = [ClassMembershipInline]
+    inlines       = [FundGroupInline, ClassMembershipInline]
+
+    @admin.display(description='Members')
+    def member_count(self, obj):
+        return obj.memberships.count()
+
+
+@admin.register(FundGroup)
+class FundGroupAdmin(admin.ModelAdmin):
+    list_display  = ('name', 'school_class', 'can_log_expenses', 'can_manage_payment_requests',
+                     'can_view_bank_account', 'can_manage_students', 'member_count')
+    list_filter   = ('school_class',)
+    search_fields = ('name', 'school_class__name')
+    fields        = ('school_class', 'name', 'can_log_expenses', 'can_manage_payment_requests',
+                     'can_view_bank_account', 'can_manage_students')
 
     @admin.display(description='Members')
     def member_count(self, obj):
@@ -83,8 +104,8 @@ class SchoolClassAdmin(admin.ModelAdmin):
 
 @admin.register(ClassMembership)
 class ClassMembershipAdmin(admin.ModelAdmin):
-    list_display  = ('school_class', 'user', 'tier', 'joined_at')
-    list_filter   = ('tier', 'school_class')
+    list_display  = ('school_class', 'user', 'fund_group', 'joined_at')
+    list_filter   = ('fund_group__school_class',)
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'school_class__name')
     raw_id_fields = ('user',)
     readonly_fields = ('joined_at',)
