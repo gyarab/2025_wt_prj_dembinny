@@ -7,7 +7,7 @@ class AccountsConfig(AppConfig):
 
     def ready(self):
         """
-        Auto-create the four Django Groups that mirror the CustomUser roles.
+        Auto-create the Django Groups that mirror the CustomUser roles.
         Called once when Django starts (after all models are loaded).
         Using post_migrate signal so the auth_group table is guaranteed to exist.
         """
@@ -17,15 +17,17 @@ class AccountsConfig(AppConfig):
 
 def _create_default_groups(sender, **kwargs):
     """
-    Ensure the four role groups exist.  This is idempotent – safe to run many
-    times.  Permissions can be assigned to these groups in the Django admin or
-    in a data migration.
+    Ensure the role groups exist.  Idempotent – safe to run many times.
+    Permissions can be assigned to these groups in the Django admin or in a
+    data migration.
     """
     from django.contrib.auth.models import Group
 
     GROUPS = [
         'System Admin',
-        'Class Treasurer / Teacher',
+        'Treasurer – Full',
+        'Treasurer – Accountant',
+        'Treasurer – Bookkeeper',
         'Student',
         'Parent',
     ]

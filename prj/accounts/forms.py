@@ -14,49 +14,69 @@ from .models import CustomUser, SchoolClass, StudentProfile
 
 class StudentCSVImportForm(forms.Form):
     """
-    Upload a CSV file to bulk-create StudentProfile records for a class.
+    Phase-1 upload form: choose a class and upload a CSV file.
 
-    Expected CSV columns (header row required):
-        username, first_name, last_name[, variable_symbol, parent_email, parent_first_name, parent_last_name]
+    The form validates the file is well-formed and returns the decoded rows
+    via ``cleaned_data['csv_rows']`` so the view can pass them to
+    ``accounts.services.parse_student_csv()`` for a preview.
 
-    ``variable_symbol`` is **optional** – if omitted or empty the VS will be
-    auto-generated from the class VS prefix (see SchoolClass.vs_prefix and
-    StudentProfile.save()).
+    CSV format
+    ──────────
+    Required columns (header row must be present):
+        first_name, last_name
 
-    For each row the importer will:
-    1. Get-or-create a CustomUser (student, role=STUDENT) using username.
-    2. Optionally get-or-create a parent CustomUser (role=PARENT) using parent_email.
-    3. Create a StudentProfile linking the student user to the chosen class.
+    Optional columns:
+        username           – derived from first_name + last_name if absent
+        variable_symbol    – auto-generated from SchoolClass.vs_prefix if absent
+        parent_email       – creates / links a Parent user
+        parent_first_name
+        parent_last_name
+        password           – set once; random 12-char password used if absent
     """
 
     school_class = forms.ModelChoiceField(
         queryset=SchoolClass.objects.all(),
         label='Target class',
-        help_text='All imported students will be placed into this class.',
+        help_text='All students in the CSV will be enrolled in this class.',
     )
     csv_file = forms.FileField(
         label='CSV file',
         help_text=(
-            'Required columns: username, first_name, last_name. '
-            'Optional columns: variable_symbol (auto-generated if absent), '
-            'parent_email, parent_first_name, parent_last_name.'
+            'Required columns: <strong>first_name, last_name</strong>. '
+            'Optional: username, variable_symbol, '
+            'parent_email, parent_first_name, parent_last_name, password. '
+            'Header row required. UTF-8 or UTF-8-BOM encoding.'
         ),
     )
 
     def clean_csv_file(self):
         f = self.cleaned_data['csv_file']
+
+        # Enforce a 1 MB size limit
+        if f.size > 1_048_576:
+            raise forms.ValidationError('File is too large (max 1 MB).')
+
         try:
-            text = f.read().decode('utf-8-sig')   # handle Excel BOM
-            reader = csv.DictReader(io.StringIO(text))
-            required = {'username', 'first_name', 'last_name'}
-            if not required.issubset(set(reader.fieldnames or [])):
-                raise forms.ValidationError(
-                    f'CSV is missing required columns: {required - set(reader.fieldnames or [])}'
-                )
-            rows = list(reader)
-            if not rows:
-                raise forms.ValidationError('The CSV file is empty.')
-            return rows
+            text = f.read().decode('utf-8-sig')      # handle Excel BOM
         except UnicodeDecodeError:
             raise forms.ValidationError('File must be UTF-8 encoded.')
+
+        reader = csv.DictReader(io.StringIO(text))
+        fieldnames = [n.strip().lower() for n in (reader.fieldnames or [])]
+
+        required = {'first_name', 'last_name'}
+        missing = required - set(fieldnames)
+        if missing:
+            raise forms.ValidationError(
+                f'CSV is missing required columns: {", ".join(sorted(missing))}'
+            )
+
+        rows = [
+            {k.strip().lower(): (v or '').strip() for k, v in row.items()}
+            for row in reader
+        ]
+        if not rows:
+            raise forms.ValidationError('The CSV file contains no data rows.')
+
+        return rows
 

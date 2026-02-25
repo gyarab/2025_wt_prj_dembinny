@@ -3,16 +3,28 @@ accounts/models.py
 ──────────────────
 Identity, authentication, and multi-tenancy models.
 
-CustomUser    – extends AbstractUser with a role field and hide_fund_balance preference.
-SchoolClass   – a single class cohort, e.g. "4.B – 2026".
-StudentProfile – thin enrollment record: links a student user to a class, VS, and optional parent.
+CustomUser      – extends AbstractUser with a role field and hide_fund_balance preference.
+SchoolClass     – a single class cohort, e.g. "4.B – 2026".
+ClassMembership – links a treasurer-role user to a class with a specific permission tier.
+StudentProfile  – thin enrollment record: links a student user to a class, VS, and optional parent.
 
 Roles
 ─────
-SYSTEM_ADMIN  – full platform administrator (maps to Django's is_staff superuser).
-TREASURER     – class teacher / treasurer; manages the fund for one or more classes.
-STUDENT       – a regular student account; has a StudentProfile.
-PARENT        – parent / guardian account; linked via StudentProfile.parent.
+SYSTEM_ADMIN         – full platform administrator; also the only role that can import students.
+TREASURER_FULL       – full treasurer: expenses + payment requests + future features.
+TREASURER_ACCOUNTANT – mid-tier: can log expenses AND create/manage payment requests.
+TREASURER_BOOKKEEPER – limited tier: can only log expenses (read-only on payment requests).
+STUDENT              – a regular student account; has a StudentProfile.
+PARENT               – parent / guardian account; linked via StudentProfile.parent.
+
+ClassMembership permission tiers
+─────────────────────────────────
+A SchoolClass can have multiple treasurer-role users via ClassMembership.
+The ``tier`` field on ClassMembership determines per-class capabilities:
+
+  FULL        – all current and future treasurer actions.
+  ACCOUNTANT  – expenses + payment requests (no student import, no admin).
+  BOOKKEEPER  – expenses only (cannot create payment requests).
 
 Variable Symbol (VS) generation
 ────────────────────────────────
@@ -90,21 +102,35 @@ class CustomUser(AbstractUser):
     """
     Custom user model for Class Fund Manager.
 
-    Four roles distinguish what a user can see and do:
-        SYSTEM_ADMIN  – platform admin, full access.
-        TREASURER     – class treasurer / teacher, manages a class fund.
-        STUDENT       – enrolled student, read-only view of own data.
-        PARENT        – parent / guardian, read-only view of their child's data.
+    Six roles distinguish what a user can see and do:
+        SYSTEM_ADMIN         – platform admin, full access, only role that may import students.
+        TREASURER_FULL       – full treasurer: all fund management features.
+        TREASURER_ACCOUNTANT – mid-tier: expenses + payment requests.
+        TREASURER_BOOKKEEPER – limited: expenses only.
+        STUDENT              – enrolled student, read-only view of own data.
+        PARENT               – parent / guardian, read-only view of their child's data.
+
+    Note: a user's *global* role is set here.  Per-class capabilities are
+    controlled by ClassMembership.tier (which can differ per class).
     """
 
     class Role(models.TextChoices):
-        SYSTEM_ADMIN = 'system_admin', 'System Admin'
-        TREASURER    = 'treasurer',    'Class Treasurer / Teacher'
-        STUDENT      = 'student',      'Student'
-        PARENT       = 'parent',       'Parent'
+        SYSTEM_ADMIN         = 'system_admin',         'System Admin'
+        TREASURER_FULL       = 'treasurer_full',       'Treasurer (Full)'
+        TREASURER_ACCOUNTANT = 'treasurer_accountant', 'Treasurer (Accountant)'
+        TREASURER_BOOKKEEPER = 'treasurer_bookkeeper', 'Treasurer (Bookkeeper)'
+        STUDENT              = 'student',              'Student'
+        PARENT               = 'parent',               'Parent'
+
+    # Convenience set: all treasurer-tier roles
+    TREASURER_ROLES = {
+        Role.TREASURER_FULL,
+        Role.TREASURER_ACCOUNTANT,
+        Role.TREASURER_BOOKKEEPER,
+    }
 
     role = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=Role.choices,
         default=Role.STUDENT,
         verbose_name='Role',
@@ -141,8 +167,23 @@ class CustomUser(AbstractUser):
 
     @property
     def is_treasurer(self) -> bool:
-        """True for Class Treasurer / Teacher role users."""
-        return self.role == self.Role.TREASURER
+        """True for any treasurer-tier role (full / accountant / bookkeeper)."""
+        return self.role in self.TREASURER_ROLES
+
+    @property
+    def is_treasurer_full(self) -> bool:
+        """True only for the full-access treasurer tier."""
+        return self.role == self.Role.TREASURER_FULL
+
+    @property
+    def is_treasurer_accountant(self) -> bool:
+        """True for accountant tier (expenses + payment requests)."""
+        return self.role == self.Role.TREASURER_ACCOUNTANT
+
+    @property
+    def is_treasurer_bookkeeper(self) -> bool:
+        """True for bookkeeper tier (expenses only)."""
+        return self.role == self.Role.TREASURER_BOOKKEEPER
 
     @property
     def is_student(self) -> bool:
@@ -153,6 +194,25 @@ class CustomUser(AbstractUser):
     def is_parent(self) -> bool:
         """True for Parent role users."""
         return self.role == self.Role.PARENT
+
+    @property
+    def can_manage_payment_requests(self) -> bool:
+        """True if the user's global role permits creating/editing payment requests."""
+        return self.role in {
+            self.Role.SYSTEM_ADMIN,
+            self.Role.TREASURER_FULL,
+            self.Role.TREASURER_ACCOUNTANT,
+        } or self.is_superuser
+
+    @property
+    def can_log_expenses(self) -> bool:
+        """True if the user's global role permits logging expenses."""
+        return self.role in {
+            self.Role.SYSTEM_ADMIN,
+            self.Role.TREASURER_FULL,
+            self.Role.TREASURER_ACCOUNTANT,
+            self.Role.TREASURER_BOOKKEEPER,
+        } or self.is_superuser
 
     def __str__(self):
         return f"{self.get_full_name() or self.username} ({self.get_role_display()})"
@@ -184,9 +244,13 @@ class SchoolClass(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        limit_choices_to={'role': CustomUser.Role.TREASURER},
+        limit_choices_to={'role__in': [
+            CustomUser.Role.TREASURER_FULL,
+            CustomUser.Role.TREASURER_ACCOUNTANT,
+            CustomUser.Role.TREASURER_BOOKKEEPER,
+        ]},
         related_name='managed_classes',
-        help_text='The teacher/treasurer responsible for this class.',
+        help_text='Primary teacher/treasurer responsible for this class.',
     )
     school_year = models.CharField(
         max_length=20,
@@ -215,6 +279,74 @@ class SchoolClass(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ClassMembership(models.Model):
+    """
+    Links a treasurer-role user to a SchoolClass with a specific permission tier.
+
+    This replaces the single ``SchoolClass.teacher`` FK for multi-treasurer
+    scenarios.  A class can have any number of members, each with their own tier:
+
+        FULL        – all treasurer actions (expenses, payment requests, future).
+        ACCOUNTANT  – expenses + payment requests.
+        BOOKKEEPER  – expenses only.
+
+    The ``SchoolClass.teacher`` FK is kept as the *primary contact* (shown in
+    lists, admin, etc.) but access is governed by ClassMembership rows.
+    """
+
+    class Tier(models.TextChoices):
+        FULL        = 'full',        'Full (all permissions)'
+        ACCOUNTANT  = 'accountant',  'Accountant (expenses + payment requests)'
+        BOOKKEEPER  = 'bookkeeper',  'Bookkeeper (expenses only)'
+
+    school_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.CASCADE,
+        related_name='memberships',
+        help_text='The class this membership entry belongs to.',
+    )
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='class_memberships',
+        limit_choices_to={'role__in': [
+            CustomUser.Role.TREASURER_FULL,
+            CustomUser.Role.TREASURER_ACCOUNTANT,
+            CustomUser.Role.TREASURER_BOOKKEEPER,
+            CustomUser.Role.SYSTEM_ADMIN,
+        ]},
+        help_text='Treasurer who has access to this class.',
+    )
+    tier = models.CharField(
+        max_length=20,
+        choices=Tier.choices,
+        default=Tier.FULL,
+        help_text='What this member is allowed to do in this class.',
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Class Membership'
+        verbose_name_plural = 'Class Memberships'
+        unique_together = [('school_class', 'user')]
+        ordering = ['school_class', 'tier', 'user__last_name']
+
+    def __str__(self):
+        return f"{self.user} → {self.school_class} [{self.get_tier_display()}]"
+
+    # ── Tier capability helpers ───────────────────────────────────────────────
+
+    @property
+    def can_log_expenses(self) -> bool:
+        """All tiers can log expenses."""
+        return True
+
+    @property
+    def can_manage_payment_requests(self) -> bool:
+        """Accountant and Full tiers can create/edit payment requests."""
+        return self.tier in {self.Tier.FULL, self.Tier.ACCOUNTANT}
 
 
 class StudentProfile(models.Model):

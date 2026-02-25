@@ -24,6 +24,8 @@ from .utils import (
     get_class_payment_requests,
     get_class_students,
     get_treasurer_class,
+    get_treasurer_membership,
+    payment_requests_required,
     require_POST_or_405,
     treasurer_required,
     unconfirmed_requests_for_student,
@@ -170,12 +172,13 @@ def treasurer_dashboard_view(req):
         'missing_items':   missing_items,
         'recent_expenses': recent_expenses,
         'today':           today,
+        'membership':      get_treasurer_membership(req.user, school_class),
     })
 
 
 # ── Create Payment Request ────────────────────────────────────────────────────
 
-@treasurer_required
+@payment_requests_required
 def create_payment_request_view(req):
     school_class = get_treasurer_class(req.user)
     students = get_class_students(school_class)
@@ -210,7 +213,7 @@ def create_payment_request_view(req):
 
 # ── Log Bank Transfer ─────────────────────────────────────────────────────────
 
-@treasurer_required
+@payment_requests_required
 def log_transaction_view(req, pr_id=None, student_id=None):
     school_class = get_treasurer_class(req.user)
     students     = get_class_students(school_class)
@@ -329,7 +332,7 @@ def log_transaction_view(req, pr_id=None, student_id=None):
 
 # ── Quick-confirm a pending Transaction ───────────────────────────────────────
 
-@treasurer_required
+@payment_requests_required
 @require_POST_or_405
 def confirm_pending_view(req):
     """POST-only: confirm a pending Transaction — scoped to this class."""
@@ -385,7 +388,7 @@ def confirm_pending_view(req):
 
 # ── AJAX: unconfirmed requests for one student ────────────────────────────────
 
-@treasurer_required
+@payment_requests_required
 def student_requests_json(req, student_id):
     school_class = get_treasurer_class(req.user)
     students     = get_class_students(school_class)

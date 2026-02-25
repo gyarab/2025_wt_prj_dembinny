@@ -6,6 +6,7 @@ Routing is split across four dedicated apps:
   accounts      – login / logout / password change
   finances      – student dashboards, payments, treasurer tools
   communications – notification log
+  importer      – CSV student bulk-import
 """
 
 from django.contrib import admin
@@ -25,4 +26,7 @@ urlpatterns = [
 
     # ── communications: notification log ─────────────────────────────────────
     path('communications/', include('communications.urls')),
+
+    # ── importer: CSV student bulk-import ─────────────────────────────────────
+    path('import/', include('importer.urls', namespace='importer')),
 ]

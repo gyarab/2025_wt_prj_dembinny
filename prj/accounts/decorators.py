@@ -7,19 +7,22 @@ Usage
 ─────
     from accounts.decorators import role_required
 
-    @role_required('treasurer')
+    @role_required('treasurer_full')
     def my_view(request): ...
 
     # Multiple roles allowed:
-    @role_required('system_admin', 'treasurer')
+    @role_required('system_admin', 'treasurer_full', 'treasurer_accountant')
     def admin_or_treasurer_view(request): ...
 
 Pre-built shortcuts
 ───────────────────
-    @treasurer_required
+    @admin_required           – System Admin only (+ superuser)
+    @treasurer_required       – any treasurer tier + admin
+    @expenses_required        – any treasurer tier (incl. bookkeeper) + admin
+    @payment_requests_required – full + accountant + admin (NOT bookkeeper)
+    @import_required          – System Admin only (student CSV import)
     @student_required
     @parent_required
-    @admin_required
 """
 
 from functools import wraps
@@ -37,7 +40,7 @@ def role_required(*roles):
 
     *roles* should be one or more ``CustomUser.Role`` values (strings), e.g.::
 
-        @role_required('treasurer', 'system_admin')
+        @role_required('treasurer_full', 'system_admin')
 
     Unauthenticated requests are redirected to the login page.
     Authenticated users with the wrong role receive a 403-style redirect to
@@ -64,7 +67,30 @@ def role_required(*roles):
 
 # ── Shortcut decorators ───────────────────────────────────────────────────────
 
+# System Admin only
 admin_required = role_required(CustomUser.Role.SYSTEM_ADMIN)
-treasurer_required = role_required(CustomUser.Role.TREASURER, CustomUser.Role.SYSTEM_ADMIN)
+
+# Any treasurer tier OR system admin
+treasurer_required = role_required(
+    CustomUser.Role.TREASURER_FULL,
+    CustomUser.Role.TREASURER_ACCOUNTANT,
+    CustomUser.Role.TREASURER_BOOKKEEPER,
+    CustomUser.Role.SYSTEM_ADMIN,
+)
+
+# Expense logging: all treasurer tiers + admin (same as treasurer_required)
+expenses_required = treasurer_required
+
+# Payment requests: full + accountant + admin only (bookkeeper excluded)
+payment_requests_required = role_required(
+    CustomUser.Role.TREASURER_FULL,
+    CustomUser.Role.TREASURER_ACCOUNTANT,
+    CustomUser.Role.SYSTEM_ADMIN,
+)
+
+# CSV student import: System Admin only
+import_required = admin_required
+
+# Student and parent shortcuts
 student_required = role_required(CustomUser.Role.STUDENT)
-parent_required = role_required(CustomUser.Role.PARENT)
+parent_required  = role_required(CustomUser.Role.PARENT)

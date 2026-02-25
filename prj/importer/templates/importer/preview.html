@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+{% block title %}Preview Import — Class Fund Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-xl-11">
+
+    <h1 class="h3 fw-bold mb-1">📋 Import Preview — {{ school_class }}</h1>
+    <p class="text-muted mb-3">
+        File: <code>{{ filename }}</code> &nbsp;·&nbsp;
+        <strong>Rows with errors will be skipped.</strong>
+        Click <em>Confirm Import</em> to save all valid rows.
+    </p>
+
+    {# ── Summary badges ── #}
+    <div class="d-flex gap-2 flex-wrap mb-3">
+        <span class="badge bg-success fs-6 px-3 py-2">✅ {{ parse_result.valid_rows|length }} valid</span>
+        {% if parse_result.has_errors %}
+        <span class="badge bg-danger fs-6 px-3 py-2">❌ {{ parse_result.error_rows|length }} with errors (skipped)</span>
+        {% endif %}
+        <span class="badge bg-secondary fs-6 px-3 py-2">📄 {{ parse_result.total }} total rows</span>
+    </div>
+
+    {% if parse_result.has_errors %}
+    <div class="alert alert-warning">
+        <strong>Some rows have validation errors</strong> and will not be imported.
+        You can fix the CSV and re-upload, or proceed with only the valid rows.
+    </div>
+    {% endif %}
+
+    {# ── Preview table ── #}
+    <div class="table-responsive mb-4">
+        <table class="table table-sm table-hover align-middle small">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Username</th>
+                    <th>VS</th>
+                    <th>Parent Email</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in parse_result.rows %}
+                <tr class="{% if not row.is_valid %}table-danger{% endif %}">
+                    <td class="text-muted">{{ row.row_number }}</td>
+                    <td>{{ row.first_name|default:'—' }}</td>
+                    <td>{{ row.last_name|default:'—' }}</td>
+                    <td><code>{{ row.username|default:'—' }}</code></td>
+                    <td>
+                        {% if row.variable_symbol %}
+                        <code>{{ row.variable_symbol }}</code>
+                        {% else %}
+                        <span class="text-muted fst-italic">auto</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.parent_email|default:'—' }}</td>
+                    <td>
+                        {% if row.is_valid %}
+                        <span class="text-success fw-semibold">✅ OK</span>
+                        {% else %}
+                        <span class="text-danger fw-semibold">❌</span>
+                        <ul class="mb-0 ps-3 mt-1">
+                            {% for err in row.errors %}<li>{{ err }}</li>{% endfor %}
+                        </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ── Action buttons ── #}
+    <div class="d-flex gap-2 flex-wrap">
+        {% if parse_result.valid_rows %}
+        <form method="post" action="{% url 'importer:confirm' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-cfm">
+                ✅ Confirm — import {{ parse_result.valid_rows|length }} student(s)
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'importer:upload' %}" class="btn btn-outline-secondary">↩ Upload a different file</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'core',            # public pages, utilities, custom error handlers
     'finances',        # money engine: payments, transactions, expenses
     'communications',  # emails, QR codes, notification log
+    'importer',        # CSV student bulk-import
 ]
 
 MIDDLEWARE = [

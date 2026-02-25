@@ -1,26 +1,27 @@
 """
 accounts/admin.py
 ─────────────────
-Admin registrations for CustomUser, SchoolClass, and StudentProfile.
+Admin registrations for CustomUser, SchoolClass, ClassMembership, and StudentProfile.
 
 When a CustomUser is saved via the admin the user is automatically placed in
-the Django Group that corresponds to their role (e.g. role=TREASURER → group
-"Class Treasurer / Teacher").  This lets you assign model-level permissions to
-groups and have them reflected automatically.
+the Django Group that corresponds to their role.  This lets you assign
+model-level permissions to groups and have them reflected automatically.
 """
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 
-from .models import CustomUser, SchoolClass, StudentProfile
+from .models import ClassMembership, CustomUser, SchoolClass, StudentProfile
 
 # Mapping from role value → group name (must match apps.py _create_default_groups)
 ROLE_GROUP_MAP = {
-    CustomUser.Role.SYSTEM_ADMIN: 'System Admin',
-    CustomUser.Role.TREASURER:    'Class Treasurer / Teacher',
-    CustomUser.Role.STUDENT:      'Student',
-    CustomUser.Role.PARENT:       'Parent',
+    CustomUser.Role.SYSTEM_ADMIN:         'System Admin',
+    CustomUser.Role.TREASURER_FULL:       'Treasurer – Full',
+    CustomUser.Role.TREASURER_ACCOUNTANT: 'Treasurer – Accountant',
+    CustomUser.Role.TREASURER_BOOKKEEPER: 'Treasurer – Bookkeeper',
+    CustomUser.Role.STUDENT:              'Student',
+    CustomUser.Role.PARENT:               'Parent',
 }
 
 
@@ -58,13 +59,35 @@ def _sync_user_group(user: CustomUser) -> None:
         user.groups.add(group)
 
 
+class ClassMembershipInline(admin.TabularInline):
+    model = ClassMembership
+    extra = 1
+    raw_id_fields = ('user',)
+    fields = ('user', 'tier', 'joined_at')
+    readonly_fields = ('joined_at',)
+
+
 @admin.register(SchoolClass)
 class SchoolClassAdmin(admin.ModelAdmin):
-    list_display  = ('name', 'teacher', 'school_year', 'vs_prefix', 'created_at')
+    list_display  = ('name', 'teacher', 'school_year', 'vs_prefix', 'member_count', 'created_at')
     list_filter   = ('school_year',)
     search_fields = ('name', 'teacher__username', 'teacher__last_name')
     raw_id_fields = ('teacher',)
     fields        = ('name', 'teacher', 'school_year', 'vs_prefix')
+    inlines       = [ClassMembershipInline]
+
+    @admin.display(description='Members')
+    def member_count(self, obj):
+        return obj.memberships.count()
+
+
+@admin.register(ClassMembership)
+class ClassMembershipAdmin(admin.ModelAdmin):
+    list_display  = ('school_class', 'user', 'tier', 'joined_at')
+    list_filter   = ('tier', 'school_class')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'school_class__name')
+    raw_id_fields = ('user',)
+    readonly_fields = ('joined_at',)
 
 
 @admin.register(StudentProfile)

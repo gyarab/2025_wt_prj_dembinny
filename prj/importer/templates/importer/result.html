@@ -1,0 +1,87 @@
+{% extends 'core/base.html' %}
+{% block title %}Import Result — Class Fund Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-xl-11">
+
+    <h1 class="h3 fw-bold mb-1">🎉 Import Complete — {{ school_class }}</h1>
+
+    <div class="d-flex gap-2 flex-wrap my-3">
+        <span class="badge bg-success fs-6 px-3 py-2">✅ {{ batch.imported }} imported</span>
+        {% if batch.skipped %}<span class="badge bg-secondary fs-6 px-3 py-2">⏭ {{ batch.skipped }} skipped</span>{% endif %}
+        {% if batch.errors %}<span class="badge bg-danger fs-6 px-3 py-2">❌ {{ batch.errors }} errors</span>{% endif %}
+    </div>
+
+    {# ── Imported students table ── #}
+    {% if imported_students %}
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-success text-white fw-semibold">
+            Imported Students — share credentials securely (passwords shown once only)
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle small mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>VS</th>
+                        <th>Password</th>
+                        <th>Parent</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in imported_students %}
+                    <tr>
+                        <td class="text-muted">{{ item.row_number }}</td>
+                        <td>{{ item.student_user.get_full_name }}</td>
+                        <td><code>{{ item.student_user.username }}</code></td>
+                        <td><code>{{ item.profile.variable_symbol }}</code></td>
+                        <td>
+                            {% if item.plain_password %}
+                            <code class="text-danger fw-bold">{{ item.plain_password }}</code>
+                            {% else %}
+                            <span class="text-muted fst-italic">existing account</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.parent_user %}
+                            {{ item.parent_user.get_full_name|default:item.parent_user.email }}
+                            {% if item.parent_created %}<span class="badge bg-info text-dark ms-1">new</span>{% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if item.student_created %}
+                            <span class="badge bg-success">new</span>
+                            {% else %}
+                            <span class="badge bg-secondary">existing</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-danger small">
+        ⚠️ Passwords are shown <strong>once only</strong> and cannot be retrieved later.
+        Copy them now.
+    </p>
+    {% endif %}
+
+    {# ── Audit log link ── #}
+    <p class="text-muted small">
+        Batch #{{ batch.pk }} saved to the
+        <a href="{% url 'importer:batch_detail' batch.pk %}">import history</a>.
+    </p>
+
+    <div class="d-flex gap-2 mt-2">
+        <a href="{% url 'importer:upload' %}" class="btn btn-outline-cfm">📥 Import another file</a>
+        <a href="{% url 'treasurer_dashboard' %}" class="btn btn-cfm">← Dashboard</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

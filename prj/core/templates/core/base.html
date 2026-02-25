@@ -14,7 +14,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-cfm">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold" href="{% url 'homepage' %}">🏦 Class Fund Manager</a>
+            <a class="navbar-brand fw-bold" href="{% url 'homepage' %}">&#127974; Class Fund Manager</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -25,9 +25,13 @@
                     {% if user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
                     {% if user.is_treasurer or user.is_system_admin %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'treasurer_dashboard' %}">⚙ Treasurer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'treasurer_dashboard' %}">&#9881; Treasurer</a></li>
                     {% endif %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'budget' %}">📊 Budget</a></li>
+                    {% if user.is_system_admin %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'importer:upload' %}">&#128229; Import</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'importer:batch_list' %}">&#128193; Import History</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'budget' %}">&#128202; Budget</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'payment_info' %}">How to Pay</a></li>
                     {% endif %}
                 </ul>
@@ -38,8 +42,12 @@
                             {{ user.get_full_name|default:user.username }}
                             {% if user.is_system_admin %}
                             <span class="badge bg-danger text-white ms-1" style="font-size:.65rem;">Admin</span>
-                            {% elif user.is_treasurer %}
+                            {% elif user.is_treasurer_full %}
                             <span class="badge bg-cfm-gold text-dark ms-1" style="font-size:.65rem;">Treasurer</span>
+                            {% elif user.is_treasurer_accountant %}
+                            <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem;">Accountant</span>
+                            {% elif user.is_treasurer_bookkeeper %}
+                            <span class="badge bg-secondary text-white ms-1" style="font-size:.65rem;">Bookkeeper</span>
                             {% elif user.is_parent %}
                             <span class="badge bg-info text-dark ms-1" style="font-size:.65rem;">Parent</span>
                             {% else %}
@@ -73,11 +81,12 @@
     </div>
     {% endif %}
 
-    <main class="container-fluid px-4 py-4">
+    <div class="container-fluid px-4 py-3">
         {% block content %}{% endblock %}
-    </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 
 </html>

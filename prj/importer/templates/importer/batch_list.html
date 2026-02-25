@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% block title %}Import History — Class Fund Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-xl-10">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 fw-bold mb-0">📜 Import History</h1>
+        <a href="{% url 'importer:upload' %}" class="btn btn-cfm btn-sm">📥 New Import</a>
+    </div>
+
+    {% if batches %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle small">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Class</th>
+                    <th>File</th>
+                    <th>Uploaded by</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>✅</th><th>⏭</th><th>❌</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in batches %}
+                <tr>
+                    <td>{{ b.pk }}</td>
+                    <td>{{ b.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ b.school_class }}</td>
+                    <td><code>{{ b.original_filename|default:'—' }}</code></td>
+                    <td>{{ b.uploaded_by.get_full_name|default:b.uploaded_by.username }}</td>
+                    <td>
+                        {% if b.status == 'completed' %}<span class="badge bg-success">Completed</span>
+                        {% elif b.status == 'failed' %}<span class="badge bg-danger">Failed</span>
+                        {% else %}<span class="badge bg-secondary">Pending</span>{% endif %}
+                    </td>
+                    <td>{{ b.total_rows }}</td>
+                    <td>{{ b.imported }}</td>
+                    <td>{{ b.skipped }}</td>
+                    <td>{{ b.errors }}</td>
+                    <td><a href="{% url 'importer:batch_detail' b.pk %}" class="btn btn-outline-secondary btn-sm">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No imports yet.</p>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}
