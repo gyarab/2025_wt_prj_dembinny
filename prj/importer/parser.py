@@ -9,13 +9,19 @@ act on.
 
 Supported CSV columns (case-insensitive, leading/trailing whitespace trimmed)
 ─────────────────────────────────────────────────────────────────────────────
-Required:
-    first_name
-    last_name
+Identity — at least ONE of the following must be present per row:
+    username           – used directly as the login name
+    email              – local-part used as username when no username given
+    first_name + last_name  – username derived (e.g. "Jan Novák" → "jnovak")
 
 Optional:
-    username           – auto-derived from first/last name if absent
+    first_name         – user's first name
+    last_name          – user's last name
+    email              – student email address
+    username           – explicit login name (overrides derivation)
     variable_symbol    – auto-generated from SchoolClass.vs_prefix if absent
+    role               – student / parent / treasurer_bookkeeper / <FundGroup name>
+                         (default: student)
     parent_email       – creates / links a Parent user when supplied
     parent_first_name
     parent_last_name
@@ -41,7 +47,9 @@ class ParsedRow:
     row_number:        int
     first_name:        str
     last_name:         str
+    email:             str          # student email (optional)
     username:          str          # derived or supplied
+    role:              str          # e.g. 'student', 'treasurer_bookkeeper' – default 'student'
     parent_email:      str
     parent_first_name: str
     parent_last_name:  str
@@ -107,44 +115,55 @@ def _clean(raw: dict, key: str) -> str:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-REQUIRED_COLUMNS = {'first_name', 'last_name'}
+# Roles that may be assigned via the CSV importer (system-level roles)
+IMPORTABLE_ROLES = {
+    'student',
+    'treasurer_full',
+    'treasurer_accountant',
+    'treasurer_bookkeeper',
+    'parent',
+}
 
 
-def parse_csv_bytes(data: bytes) -> ParseResult:
+def parse_csv_bytes(data: bytes, extra_roles: set[str] | None = None) -> ParseResult:
     """
     Decode *data* (UTF-8 or UTF-8-BOM) and delegate to ``parse_csv_text``.
     Raises ``ValueError`` if the bytes cannot be decoded.
+
+    *extra_roles* — additional role names (e.g. FundGroup names for the target
+    class) that are valid beyond the built-in ``IMPORTABLE_ROLES``.
     """
     try:
         text = data.decode('utf-8-sig')
     except UnicodeDecodeError as exc:
         raise ValueError('CSV file must be UTF-8 encoded.') from exc
-    return parse_csv_text(text)
+    return parse_csv_text(text, extra_roles=extra_roles)
 
 
-def parse_csv_text(text: str) -> ParseResult:
+def parse_csv_text(text: str, extra_roles: set[str] | None = None) -> ParseResult:
     """
     Parse *text* as CSV and return a ``ParseResult``.
 
-    Structural errors (missing header, missing required columns, empty file)
-    are stored in ``ParseResult.field_errors``.
+    Structural errors (missing header, empty file) are stored in
+    ``ParseResult.field_errors``.
     Per-row validation errors are stored on each ``ParsedRow.errors``.
+
+    Identity requirement — a row is valid when it supplies **at least one** of:
+      • ``username``
+      • ``email``  (local-part used as username candidate when no username given)
+      • ``first_name`` **and** ``last_name``  (username derived as before)
+
+    *extra_roles* — additional role names valid for this import
+    (e.g. FundGroup names created by the class admin).
 
     Nothing is written to the database.
     """
+    valid_roles = IMPORTABLE_ROLES | {r.lower() for r in (extra_roles or set())}
+
     reader = csv.DictReader(io.StringIO(text))
 
     if not reader.fieldnames:
         return ParseResult(rows=[], field_errors=['CSV file has no header row.'])
-
-    # Normalise fieldnames to lower-case stripped strings
-    normalised_fields = {f.strip().lower() for f in reader.fieldnames}
-    missing = REQUIRED_COLUMNS - normalised_fields
-    if missing:
-        return ParseResult(
-            rows=[],
-            field_errors=[f'CSV is missing required columns: {", ".join(sorted(missing))}.'],
-        )
 
     rows: list[ParsedRow] = []
     seen_vs: set[str] = set()          # dedup within the file
@@ -154,17 +173,46 @@ def parse_csv_text(text: str) -> ParseResult:
         r = {k.strip().lower(): (v or '').strip() for k, v in raw.items()}
         errors: list[str] = []
 
-        first_name = _clean(r, 'first_name')
-        last_name  = _clean(r, 'last_name')
+        first_name   = _clean(r, 'first_name')
+        last_name    = _clean(r, 'last_name')
+        username_raw = _clean(r, 'username')
+        email        = _clean(r, 'email')
 
-        if not first_name:
-            errors.append('first_name is required.')
-        if not last_name:
-            errors.append('last_name is required.')
+        # ── Identity check ────────────────────────────────────────────────────
+        # At least one identity anchor must be present.
+        has_name     = bool(first_name and last_name)
+        has_identity = bool(username_raw or email or has_name)
+        if not has_identity:
+            errors.append(
+                'Provide at least one identifier: username, email, '
+                'or both first_name and last_name.'
+            )
 
-        username = _clean(r, 'username') or (
-            _derive_username(first_name, last_name) if first_name and last_name else ''
-        )
+        # ── Derive username ───────────────────────────────────────────────────
+        if username_raw:
+            username = username_raw
+        elif email:
+            # Use the local-part of the email (before @) as a username candidate.
+            username = email.split('@')[0][:30] if '@' in email else email[:30]
+        elif has_name:
+            username = _derive_username(first_name, last_name)
+        else:
+            username = ''   # identity error already recorded above
+
+        # ── Email validation ──────────────────────────────────────────────────
+        if email and '@' not in email:
+            errors.append(f'email "{email}" is not a valid email address.')
+
+        # ── Role ──────────────────────────────────────────────────────────────
+        # Store role as-is from CSV (preserving case for FundGroup name lookup);
+        # default to 'student' if absent.  Validation is case-insensitive.
+        role_raw = _clean(r, 'role') or 'student'
+        role = role_raw   # preserved for FundGroup name matching in services
+        if role_raw.lower() not in valid_roles:
+            errors.append(
+                f'role "{role_raw}" is not recognised. '
+                f'Valid values: {", ".join(sorted(valid_roles))}.'
+            )
 
         vs = _clean(r, 'variable_symbol')
         if vs:
@@ -185,7 +233,9 @@ def parse_csv_text(text: str) -> ParseResult:
             row_number=i,
             first_name=first_name,
             last_name=last_name,
+            email=email,
             username=username,
+            role=role,
             parent_email=parent_email,
             parent_first_name=_clean(r, 'parent_first_name'),
             parent_last_name=_clean(r, 'parent_last_name'),
@@ -193,8 +243,5 @@ def parse_csv_text(text: str) -> ParseResult:
             password=_clean(r, 'password'),
             errors=errors,
         ))
-
-    if not rows:
-        return ParseResult(rows=[], field_errors=['The CSV file contains no data rows.'])
 
     return ParseResult(rows=rows)

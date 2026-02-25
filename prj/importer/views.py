@@ -5,13 +5,13 @@ Three-step CSV import flow (System Admin only):
 
   Step 1  GET  /import/               – upload form
   Step 1  POST /import/               – parse CSV → preview
-  Step 2  GET  /import/preview/       – review rows, confirm or cancel
+  Step 2  GET  /import/preview/       – review rows, edit inline, confirm or cancel
+  Step 2  POST /import/preview/       – save inline edits back to session → re-render
   Step 2  POST /import/confirm/       – execute import → result
   Step 3  GET  /import/history/       – list past batches
   Step 3  GET  /import/history/<id>/  – single batch detail
 
-Note: Only System Admins can import students.  Treasurers (all tiers)
-      are denied at the decorator level.
+Note: Only System Admins can import students.
 """
 
 from django.contrib import messages
@@ -19,15 +19,60 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import import_required
-from accounts.models import SchoolClass
+from accounts.models import FundGroup, SchoolClass
 
 from .forms import StudentCSVUploadForm
 from .models import ImportBatch
-from .parser import ParsedRow, ParseResult, parse_csv_bytes
+from .parser import IMPORTABLE_ROLES, ParsedRow, ParseResult, parse_csv_bytes, _derive_username
 from .services import execute_import
 
 # Session key used to carry parsed rows between upload and confirm steps
 _SESSION_KEY = 'importer_preview'
+
+# System-level role choices shown in the preview dropdown
+_SYSTEM_ROLE_CHOICES = [
+    ('student',              'Student'),
+    ('treasurer_full',       'Treasurer (Full)'),
+    ('treasurer_accountant', 'Treasurer (Accountant)'),
+    ('treasurer_bookkeeper', 'Treasurer (Bookkeeper)'),
+    ('parent',               'Parent'),
+]
+
+
+def _build_role_choices(school_class_id: int | None) -> list[tuple[str, str]]:
+    """
+    Return role choices for the preview dropdown.
+    Includes system roles + any FundGroups created for the target class.
+    """
+    choices = list(_SYSTEM_ROLE_CHOICES)
+    if school_class_id:
+        for fg in FundGroup.objects.filter(school_class_id=school_class_id).order_by('name'):
+            choices.append((fg.name, fg.name))
+    return choices
+
+
+def _build_group_role_choices(school_class_id: int | None) -> list[tuple[str, str]]:
+    """Return (name, name) tuples for FundGroups of the given class."""
+    if not school_class_id:
+        return []
+    return [
+        (fg.name, fg.name)
+        for fg in FundGroup.objects.filter(school_class_id=school_class_id).order_by('name')
+    ]
+
+
+def _get_extra_roles(school_class_id: int | None) -> set[str]:
+    """Return the set of FundGroup names valid for *school_class_id*."""
+    if not school_class_id:
+        return set()
+    return set(FundGroup.objects.filter(school_class_id=school_class_id).values_list('name', flat=True))
+
+
+def _get_fund_groups_by_name(school_class_id: int | None) -> dict:
+    """Return a {name: FundGroup} dict for the given class."""
+    if not school_class_id:
+        return {}
+    return {fg.name: fg for fg in FundGroup.objects.filter(school_class_id=school_class_id)}
 
 
 # ── Step 1 – Upload & parse ───────────────────────────────────────────────────
@@ -46,7 +91,8 @@ def upload_view(req):
             csv_file = req.FILES['csv_file']
 
             try:
-                parse_result = parse_csv_bytes(csv_file.read())
+                extra_roles = _get_extra_roles(school_class.pk)
+                parse_result = parse_csv_bytes(csv_file.read(), extra_roles=extra_roles)
             except ValueError as exc:
                 messages.error(req, str(exc))
                 return render(req, 'importer/upload.html', {'form': form})
@@ -65,7 +111,9 @@ def upload_view(req):
                         'row_number':        r.row_number,
                         'first_name':        r.first_name,
                         'last_name':         r.last_name,
+                        'email':             r.email,
                         'username':          r.username,
+                        'role':              r.role,
                         'parent_email':      r.parent_email,
                         'parent_first_name': r.parent_first_name,
                         'parent_last_name':  r.parent_last_name,
@@ -83,13 +131,14 @@ def upload_view(req):
     return render(req, 'importer/upload.html', {'form': form})
 
 
-# ── Step 2a – Preview ─────────────────────────────────────────────────────────
+# ── Step 2a – Preview (GET + inline-edit POST) ───────────────────────────────
 
 @import_required
 def preview_view(req):
     """
-    Show a table of all parsed rows so the treasurer can review before
-    anything is written to the database.
+    GET  → show editable table of all parsed rows.
+    POST → save inline edits (first_name, last_name, email, role, variable_symbol,
+           parent_email) back into the session, then re-render.
     """
     session_data = req.session.get(_SESSION_KEY)
     if not session_data:
@@ -97,12 +146,74 @@ def preview_view(req):
         return redirect('importer:upload')
 
     school_class = get_object_or_404(SchoolClass, pk=session_data['school_class_id'])
-    parse_result = _hydrate(session_data)
+    extra_roles  = _get_extra_roles(school_class.pk)
+    valid_roles  = IMPORTABLE_ROLES | {r.lower() for r in extra_roles}
+    system_role_choices = list(_SYSTEM_ROLE_CHOICES)
+    group_role_choices  = _build_group_role_choices(school_class.pk)
 
+    if req.method == 'POST':
+        rows = session_data['rows']
+        edit_errors = []
+
+        for rd in rows:
+            idx = str(rd['row_number'])
+            # Apply edits from POST data; fall back to existing value if field absent
+            rd['first_name']   = req.POST.get(f'first_name_{idx}',   rd['first_name']).strip()
+            rd['last_name']    = req.POST.get(f'last_name_{idx}',    rd['last_name']).strip()
+            rd['email']        = req.POST.get(f'email_{idx}',        rd['email']).strip()
+            rd['role']         = req.POST.get(f'role_{idx}',         rd['role']).strip().lower()
+            rd['variable_symbol'] = req.POST.get(f'vs_{idx}',        rd['variable_symbol']).strip()
+            rd['parent_email'] = req.POST.get(f'parent_email_{idx}', rd['parent_email']).strip()
+
+            # Re-derive username from edited identity fields (unless explicitly set)
+            if not rd['username']:
+                if rd['email'] and '@' in rd['email']:
+                    rd['username'] = rd['email'].split('@')[0][:30]
+                elif rd['first_name'] and rd['last_name']:
+                    rd['username'] = _derive_username(rd['first_name'], rd['last_name'])
+
+            # Re-validate the edited row
+            errs = []
+            has_name     = bool(rd['first_name'] and rd['last_name'])
+            has_identity = bool(rd['username'] or rd['email'] or has_name)
+            if not has_identity:
+                errs.append(
+                    'Provide at least one identifier: username, email, '
+                    'or both first_name and last_name.'
+                )
+            if rd['email'] and '@' not in rd['email']:
+                errs.append(f'email "{rd["email"]}" is not a valid email address.')
+            if rd['role'].lower() not in valid_roles:
+                errs.append(f'role "{rd["role"]}" is not valid.')
+            vs = rd['variable_symbol']
+            if vs:
+                if not vs.isdigit():
+                    errs.append(f'variable_symbol "{vs}" must be digits only.')
+                elif len(vs) > 10:
+                    errs.append(f'variable_symbol "{vs}" must be at most 10 digits.')
+            if rd['parent_email'] and '@' not in rd['parent_email']:
+                errs.append(f'parent_email "{rd["parent_email"]}" is not a valid email.')
+            rd['errors'] = errs
+            if errs:
+                edit_errors.append(rd['row_number'])
+
+        # Persist updated rows back into session
+        session_data['rows'] = rows
+        req.session[_SESSION_KEY] = session_data
+        req.session.modified = True
+
+        if edit_errors:
+            messages.warning(req, f'Rows {edit_errors} still have errors — fix them or they will be skipped.')
+        else:
+            messages.success(req, 'Edits saved.')
+
+    parse_result = _hydrate(session_data)
     return render(req, 'importer/preview.html', {
-        'parse_result': parse_result,
-        'school_class': school_class,
-        'filename':     session_data.get('filename', ''),
+        'parse_result':       parse_result,
+        'school_class':       school_class,
+        'filename':           session_data.get('filename', ''),
+        'system_role_choices': system_role_choices,
+        'group_role_choices':  group_role_choices,
     })
 
 
@@ -123,12 +234,14 @@ def confirm_view(req):
 
     school_class = get_object_or_404(SchoolClass, pk=session_data['school_class_id'])
     parse_result = _hydrate(session_data)
+    fund_groups_by_name = _get_fund_groups_by_name(school_class.pk)
 
     batch, imported_students = execute_import(
         parse_result=parse_result,
         school_class=school_class,
         uploaded_by=req.user,
         filename=session_data.get('filename', ''),
+        fund_groups_by_name=fund_groups_by_name,
     )
 
     return render(req, 'importer/result.html', {
@@ -166,7 +279,9 @@ def _hydrate(session_data: dict) -> ParseResult:
             row_number=d['row_number'],
             first_name=d['first_name'],
             last_name=d['last_name'],
+            email=d.get('email', ''),
             username=d['username'],
+            role=d.get('role', 'student'),
             parent_email=d['parent_email'],
             parent_first_name=d['parent_first_name'],
             parent_last_name=d['parent_last_name'],

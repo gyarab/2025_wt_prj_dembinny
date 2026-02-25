@@ -27,8 +27,11 @@ class StudentCSVUploadForm(forms.Form):
         label='CSV file',
         help_text=(
             'Required columns: <strong>first_name</strong>, <strong>last_name</strong>. '
-            'Optional: username, variable_symbol, '
+            'Optional: <strong>email</strong>, <strong>role</strong> '
+            '(student / treasurer_full / treasurer_accountant / treasurer_bookkeeper / parent), '
+            'username, variable_symbol, '
             'parent_email, parent_first_name, parent_last_name, password. '
+            'All fields can also be edited in the preview step. '
             'Header row is required. UTF-8 or UTF-8-BOM encoding.'
         ),
         widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.csv,text/csv'}),
