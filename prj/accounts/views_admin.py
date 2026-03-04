@@ -16,7 +16,13 @@ membership_edit_view      – change which FundGroup a membership belongs to
 membership_delete_view    – remove a ClassMembership (POST-only)
 """
 
+import io
+
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
+
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .decorators import admin_required
@@ -211,3 +217,70 @@ def membership_delete_view(req, membership_id):
     membership.delete()
     messages.success(req, f'🗑 Removed {name} from {klass}.')
     return redirect('admin_panel')
+
+
+# ── Credentials Export ────────────────────────────────────────────────────────
+
+@admin_required
+def export_credentials_view(req, class_id):
+    """
+    Generate and download an Excel (.xlsx) sheet containing the pre-generated
+    usernames and passwords for all students in *class_id*.
+
+    Only rows where a plain-text password was recorded at import time are
+    included (i.e. newly created accounts from the CSV importer).
+    """
+    from importer.models import ImportRow
+
+    school_class = get_object_or_404(SchoolClass, pk=class_id)
+
+    rows = (
+        ImportRow.objects
+        .filter(batch__school_class=school_class)
+        .exclude(plain_password='')
+        .values('last_name', 'first_name', 'username', 'plain_password', 'variable_symbol')
+        .order_by('last_name', 'first_name')
+    )
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Credentials'
+
+    # Header row styling
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill(fill_type='solid', fgColor='2D6A4F')
+    header_alignment = Alignment(horizontal='center', vertical='center')
+
+    headers = ['Last Name', 'First Name', 'Username', 'Password', 'Variable Symbol']
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    # Data rows
+    for row_idx, row in enumerate(rows, start=2):
+        ws.cell(row=row_idx, column=1, value=row['last_name'])
+        ws.cell(row=row_idx, column=2, value=row['first_name'])
+        ws.cell(row=row_idx, column=3, value=row['username'])
+        ws.cell(row=row_idx, column=4, value=row['plain_password'])
+        ws.cell(row=row_idx, column=5, value=row['variable_symbol'])
+
+    # Auto-fit column widths
+    for col in ws.columns:
+        max_len = max((len(str(cell.value or '')) for cell in col), default=0)
+        ws.column_dimensions[col[0].column_letter].width = max(max_len + 4, 14)
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    safe_name = ''.join(c if c.isalnum() else '_' for c in school_class.name)
+    filename = f'credentials_{safe_name}.xlsx'
+
+    response = HttpResponse(
+        buf.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

@@ -59,6 +59,10 @@
                class="btn btn-sm btn-cfm" title="Add member to this class">
                 &#43; Member
             </a>
+            <a href="{% url 'export_credentials' school_class.pk %}"
+               class="btn btn-sm btn-outline-success" title="Download student credentials as Excel">
+                &#8659; Credentials
+            </a>
         </div>
     </div>
 
