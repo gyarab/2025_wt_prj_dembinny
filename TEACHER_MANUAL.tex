@@ -1,0 +1,465 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+% ── Colours ──────────────────────────────────────────────────────────────────
+\definecolor{accentblue}{RGB}{13,110,253}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{warnred}{RGB}{185,28,28}
+
+% ── Header / footer ──────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Class Fund Manager}
+\lhead{\small Teacher \& Treasurer Manual}
+\rfoot{\small Page \thepage}
+\lfoot{\small \today}
+
+% ── Section formatting ────────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries\color{accentblue}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+
+% ── Hyperlink colours ─────────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=accentblue,
+    urlcolor=accentblue
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\title{\textbf{Class Fund Manager}\\[0.4em]
+       \large Teacher \& Treasurer Manual}
+\author{}
+\date{\today}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\vspace{1em}
+
+\noindent
+This manual covers every task a \textbf{teacher}, \textbf{Full Treasurer}, or
+\textbf{Bookkeeper} will need to perform in the Class Fund Manager.
+The application runs at:
+\begin{center}
+    \url{https://two025-wt-prj-dembinny.onrender.com}
+\end{center}
+
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Roles and Permissions}
+% ─────────────────────────────────────────────────────────────────────────────
+
+The system has six user roles.
+The table below shows which actions each role may perform.
+
+\begin{longtable}{>{\bfseries}p{4.5cm} p{8.5cm}}
+\toprule
+Role & Capabilities \\
+\midrule
+\endhead
+System Admin    & Full access to every class and every feature.
+                  Creates and manages class accounts. \\
+Treasurer Full  & Full treasurer capabilities for their assigned class:
+                  payment requests, transactions, expenses, student management,
+                  bank account visibility. \\
+Treasurer Accountant & Can manage payment requests and view the bank account,
+                  but cannot log expenses or manage students. \\
+Treasurer Bookkeeper & Can log expenses and record cash transactions,
+                  but cannot create payment requests or manage students. \\
+Student         & Views their own assigned payment requests, pays via QR,
+                  sees their own transaction history. \\
+Parent          & Views the same payment data as their linked child. \\
+\bottomrule
+\end{longtable}
+
+\noindent
+\textbf{Fund Groups} are custom permission sets you create inside the Admin
+Panel (see Section~\ref{sec:admin}). A Fund Group acts like a named role for
+your class — useful when you want a subset of treasurer abilities for class
+representatives without giving full treasurer access.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Logging In}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Navigate to \url{https://two025-wt-prj-dembinny.onrender.com/login/} and enter
+your \textbf{username} and \textbf{password}.
+After a successful login you are redirected to the Dashboard appropriate for
+your role.
+
+If you forget your password, contact your System Admin — there is no
+self-service password reset in the current version.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Dashboard Overview}
+% ─────────────────────────────────────────────────────────────────────────────
+
+The Treasurer Dashboard is your home screen. It shows:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Fund Balance} — total collected minus total expenses
+          (Collected: sum of all confirmed transactions;
+           Spent: sum of all logged expenses).
+    \item \textbf{Payment Requests} — a list of active requests with how many
+          students have paid (\emph{N/Total}).
+    \item \textbf{Recent Expenses} — the most recent expense records.
+    \item \textbf{Quick links} — navigate to Expenses, Import, or Admin Panel.
+\end{itemize}
+
+\noindent
+\textcolor{warnred}{\textbf{Important:}} The ``Fund Balance'' displayed in the
+top navigation bar respects the \texttt{hide\_fund\_balance} flag on each
+student's account. If a student has this flag set, they cannot see the fund
+total.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Bulk Importing Students (CSV)}
+\label{sec:import}
+% ─────────────────────────────────────────────────────────────────────────────
+
+The fastest way to populate your class roster is to upload a CSV file.
+Only users with \textbf{Treasurer Full} or \textbf{System Admin} privileges
+can access the importer.
+
+\subsection{How to navigate to the importer}
+
+\begin{enumerate}[noitemsep]
+    \item From the Dashboard click \textbf{Import Students}.
+    \item Select your \textbf{Class} from the dropdown.
+    \item Upload the \texttt{.csv} file and click \textbf{Preview Import}.
+    \item Review the preview table — green rows will be created,
+          red rows have errors and will be skipped.
+    \item Click \textbf{Confirm Import} to apply all valid rows.
+\end{enumerate}
+
+\subsection{CSV format and column reference}
+
+The file must be \textbf{UTF-8 encoded} and include a \textbf{header row}.
+Column names are case-insensitive and leading/trailing spaces are ignored.
+
+\bigskip
+\begin{longtable}{>{\ttfamily}p{4cm} p{2cm} p{7.5cm}}
+\toprule
+\normalfont Column & Required? & Notes \\
+\midrule
+\endhead
+username           & \textit{see note} & Login name used for authentication. \\
+email              & \textit{see note} & Student email. When no username is given,
+                                         the local part (before @) becomes the username. \\
+first\_name        & \textit{see note} & First name. Used together with \texttt{last\_name}
+                                         to derive a username when neither username nor email
+                                         is provided (e.g.\ ``Jan Novák'' → ``jnovak''). \\
+last\_name         & Optional  & Last name. Stored on the user account. \\
+role               & Optional  & One of: \texttt{student}, \texttt{parent},
+                                  \texttt{treasurer\_full}, \texttt{treasurer\_accountant},
+                                  \texttt{treasurer\_bookkeeper},
+                                  or any \textbf{Fund Group name} you have created for this class.
+                                  Defaults to \texttt{student} when omitted. \\
+variable\_symbol   & Optional  & Payment identifier (5 digits).
+                                  Auto-generated from the class prefix if blank. \\
+parent\_email      & Optional  & If provided, a Parent account is created (or found by email)
+                                  and linked to this student. \\
+parent\_first\_name & Optional & First name stored on the Parent account. \\
+parent\_last\_name  & Optional & Last name stored on the Parent account. \\
+password           & Optional  & Sets the initial password. A random 12-character
+                                  password is generated if blank.
+                                  Communicate the password to the user separately. \\
+\bottomrule
+\end{longtable}
+
+\noindent
+\textbf{Identity rule:} Every row must supply \emph{at least one} of:
+\texttt{username}, \texttt{email}, or both \texttt{first\_name} and
+\texttt{last\_name}. Rows that have none of these are rejected.
+
+\subsection{Minimal CSV example}
+
+\begin{verbatim}
+first_name,last_name,parent_email
+Jan,Novák,jan.novak.otec@example.cz
+Marie,Horáková,horak.maminka@example.cz
+\end{verbatim}
+
+\subsection{Full CSV example with all columns}
+
+\begin{verbatim}
+username,email,first_name,last_name,role,variable_symbol,
+    parent_email,parent_first_name,parent_last_name,password
+jnovak,jan.novak@skola.cz,Jan,Novák,student,04001,
+    jan.novak.otec@example.cz,Petr,Novák,tajne123
+mhora,,Marie,Horáková,student,,
+    horak.maminka@example.cz,Eva,Horáková,
+\end{verbatim}
+
+\noindent
+\textcolor{warnred}{\textbf{Note:}} Lines are wrapped here for readability.
+In the actual file each row must be a single unbroken line.
+
+\subsection{What happens on import?}
+
+For each valid row the system:
+\begin{enumerate}[noitemsep]
+    \item Looks up an existing user by \texttt{username} → \texttt{email}
+          → first+last name. Creates a new user if none is found.
+    \item Sets the user's \texttt{role}. If the role matches a \textbf{Fund Group}
+          name, the user is created as a \texttt{TREASURER\_BOOKKEEPER} and added
+          to that group.
+    \item Generates a \textbf{Variable Symbol} if not supplied
+          (format: \texttt{<2-digit class prefix><3-digit sequence>}).
+    \item Creates or links the \textbf{Parent account} if \texttt{parent\_email}
+          is present.
+    \item Records the import in the \texttt{ImportJob} log for audit purposes.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Creating a Payment Request}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Payment Requests tell students and parents what they owe and by when.
+
+\begin{enumerate}[noitemsep]
+    \item Navigate to \textbf{Finances → Payment Requests → New Request}.
+    \item Fill in:
+        \begin{itemize}[noitemsep]
+            \item \textbf{Title} — e.g.\ "School Trip to Prague".
+            \item \textbf{Amount} — decimal, e.g.\ \texttt{450.00} CZK.
+            \item \textbf{Due Date} — students see this deadline.
+            \item \textbf{Assign to all} — tick to assign every active class
+                  student automatically.
+                  Untick to choose specific students from the list.
+            \item \textbf{Variable Symbol / Specific Symbol} — optional;
+                  helps match bank transfers if used.
+        \end{itemize}
+    \item Click \textbf{Save}. The request is immediately visible on every
+          assigned student's dashboard.
+\end{enumerate}
+
+\noindent
+A SPAYD QR code is automatically generated for each student using their
+personal Variable Symbol. See Section~\ref{sec:qr}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Recording Transactions}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Manual cash payment}
+
+Use this when a student brings cash in person.
+
+\begin{enumerate}[noitemsep]
+    \item Open \textbf{Finances → Payment Requests} and click the relevant
+          request.
+    \item Find the student in the list and click \textbf{Record Cash Payment}.
+    \item Enter the amount received (may be partial).
+    \item A transaction is created with status \textbf{PENDING}.
+    \item Click \textbf{Confirm} to mark it as received.
+          The student's dashboard immediately shows it as paid.
+\end{enumerate}
+
+\subsection{Bank transfer (planned)}
+
+The system is designed to import bank transactions automatically from
+a Fio Bank account. This feature is \textbf{not yet live} — matching is
+planned to use the student's Variable Symbol.
+Until then, all bank transfers must be confirmed manually as cash payments.
+
+\subsection{Transaction statuses}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Status & Meaning \\
+\midrule
+PENDING   & Recorded but not yet confirmed by a treasurer. \\
+CONFIRMED & Payment accepted; contributes to fund balance. \\
+REJECTED  & Declined (wrong amount, bounced, etc.). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Logging an Expense}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Expenses reduce the displayed fund balance and give parents transparency
+into where the class money is spent.
+
+\begin{enumerate}[noitemsep]
+    \item Navigate to \textbf{Finances → Expenses → New Expense}.
+    \item Fill in:
+        \begin{itemize}[noitemsep]
+            \item \textbf{Title} — what was purchased.
+            \item \textbf{Amount} — decimal, e.g.\ \texttt{2500.00} CZK.
+            \item \textbf{Category} — one of:
+                  Trip, Supplies, Food, Decoration, Donation, Other.
+            \item \textbf{Spent at} — date of the purchase.
+            \item \textbf{Publish} — tick to make the expense visible
+                  to students and parents in their dashboard.
+        \end{itemize}
+    \item Click \textbf{Save}.
+\end{enumerate}
+
+\noindent
+Expenses are shown in the treasurer dashboard; published expenses also
+appear in the student/parent view.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{SPAYD QR Codes}
+\label{sec:qr}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Each payment request page displays a QR code in the
+\textbf{SPAYD format} — the Czech banking standard for mobile payments.
+
+When a parent scans the QR code with their banking app:
+\begin{itemize}[noitemsep]
+    \item The class bank account number is pre-filled.
+    \item The payment amount is pre-filled.
+    \item The student's \textbf{Variable Symbol} is pre-filled.
+\end{itemize}
+
+\noindent
+This means the bank transfer can be matched to the correct student
+automatically once bank import is activated.
+Parents never need to type account numbers or symbols manually.
+
+\noindent
+The QR codes are generated server-side and embedded directly in the page
+as Base64 PNG images — no external service is contacted.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Managing Classes and Users (Admin Panel)}
+\label{sec:admin}
+% ─────────────────────────────────────────────────────────────────────────────
+
+The Django Admin Panel at \url{.../admin/} is accessible to \textbf{System Admins} only.
+
+\subsection{Creating a new class}
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Admin → Accounts → School Classes → Add School Class}.
+    \item Set \textbf{Name} (e.g.\ "4A"), \textbf{Teacher}, \textbf{School Year},
+          and \textbf{VS Prefix} (a 2-digit number uniquely identifying the class
+          for Variable Symbol generation — e.g.\ \texttt{04}).
+    \item Save.
+\end{enumerate}
+
+\subsection{Creating a Fund Group}
+
+Fund Groups let you assign custom treasurer sub-roles to users
+(e.g.\ a class representative who can log expenses but not manage payment
+requests).
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Admin → Accounts → Fund Groups → Add Fund Group}.
+    \item Select the \textbf{Class}.
+    \item Enter the \textbf{Name} — this name can be used as the
+          \texttt{role} column value in CSV imports.
+    \item Tick the \textbf{permission flags} that apply to this group:
+        \begin{itemize}[noitemsep]
+            \item \textit{Can log expenses}
+            \item \textit{Can manage payment requests}
+            \item \textit{Can view bank account}
+            \item \textit{Can manage students}
+        \end{itemize}
+    \item Save.
+\end{enumerate}
+
+\subsection{Adding or editing a Class Membership}
+
+A \textbf{Class Membership} links a user to a class and optionally
+assigns them a Fund Group.
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Admin → Accounts → Class Memberships → Add}.
+    \item Choose \textbf{User}, \textbf{School Class}, and optionally a
+          \textbf{Fund Group}.
+    \item Save.
+\end{enumerate}
+
+\subsection{Managing the Bank Account record}
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Admin → Finances → Bank Accounts → Add}.
+    \item Link to a \textbf{School Class} (one active bank account per class).
+    \item Enter \textbf{Account Number}, \textbf{IBAN}, \textbf{BIC},
+          \textbf{Bank Name}, and \textbf{Owner Name}.
+    \item Tick \textbf{Is Active} and Save.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Viewing the Notification Log}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Every email sent by the system (welcome messages, payment reminders,
+receipts) is stored in the \textbf{Notification Log}:
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Admin → Communications → Notification Logs}.
+    \item Use the filters on the right to narrow by \textit{type} or
+          \textit{recipient}.
+    \item Each record shows the recipient, type, timestamp, and the
+          rendered message body.
+\end{enumerate}
+
+\noindent
+This log is read-only — it is an audit trail, not a re-send queue.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Common Troubleshooting}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{longtable}{p{5.5cm} p{8cm}}
+\toprule
+Problem & Solution \\
+\midrule
+\endhead
+A student cannot log in.
+    & Check their username in Admin → Accounts → Users.
+      Reset the password from the user's edit page. \\
+Import shows all rows as errors.
+    & Ensure the file is saved as \textbf{UTF-8} (not UTF-16 or Windows-1250).
+      Each row needs at least username, email, or first+last name. \\
+Fund balance looks wrong.
+    & Confirm that all cash transactions have been set to
+      \textbf{CONFIRMED} status.
+      PENDING transactions are not counted in the balance. \\
+QR code does not appear.
+    & The class must have an active Bank Account record (see Section~\ref{sec:admin}).
+      Without an IBAN, no QR can be generated. \\
+A student has no Variable Symbol.
+    & Open \textbf{Admin → Accounts → Student Profiles}, find the student,
+      and click \textbf{Regenerate VS}. Make sure the class has a
+      non-empty \texttt{vs\_prefix}. \\
+The site shows ``502 Bad Gateway'' on Render.
+    & The free Render plan spins down after inactivity.
+      Wait 30–60 seconds for the dyno to wake up, then refresh. \\
+\bottomrule
+\end{longtable}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Contact and Support}
+% ─────────────────────────────────────────────────────────────────────────────
+
+This project is maintained as a school web-technologies assignment.
+For bug reports or feature requests open an issue on GitHub:
+
+\begin{center}
+    \url{https://github.com/gyarab/2025_wt_prj_dembinny}
+\end{center}
+
+\end{document}
