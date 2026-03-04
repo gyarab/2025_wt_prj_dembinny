@@ -68,6 +68,15 @@ class ImportRow(models.Model):
     username   = models.CharField(max_length=150, blank=True)
     variable_symbol = models.CharField(max_length=10, blank=True)
     parent_email    = models.CharField(max_length=254, blank=True)
+    # Plain-text password stored only for **newly created** accounts so it can
+    # be exported to a credential sheet for the teacher.  Left blank when the
+    # account already existed and its password was not changed.
+    plain_password  = models.CharField(
+        max_length=128,
+        blank=True,
+        verbose_name='Initial password',
+        help_text='Plain-text password set at import time (empty for pre-existing accounts).',
+    )
     outcome    = models.CharField(max_length=20, choices=Outcome.choices)
     message    = models.TextField(blank=True)   # error detail or "new user" / "existing"
 

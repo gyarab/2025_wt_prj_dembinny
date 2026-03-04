@@ -43,4 +43,9 @@ urlpatterns = [
     path('admin-panel/memberships/<int:membership_id>/delete/',
          views_admin.membership_delete_view,
          name='membership_delete'),
+
+    # Credentials export
+    path('admin-panel/classes/<int:class_id>/export-credentials/',
+         views_admin.export_credentials_view,
+         name='export_credentials'),
 ]
