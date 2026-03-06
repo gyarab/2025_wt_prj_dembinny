@@ -21,12 +21,14 @@ The architecture enforces the non‑negotiable rule: never query scoped financia
 ### User-flow
 
 ![User flow](./user-flow.drawio.svg)
+[User flow](./user-flow.drawio.svg)
 
 
 
 ### Wireframe
 
 ![Wireframe](./Wireframe.drawio.svg)
+[Wireframe](./Wireframe.drawio.svg)
 
 ---
 
@@ -141,15 +143,15 @@ Open `http://127.0.0.1:8000/` — unauthenticated users see the landing page.
 
 ## Environment variables reference
 
-| Variable | Default | Prod required? | Description |
-|---|---|---|---|
-| `SECRET_KEY` | insecure dev key | **Yes** | Django cryptographic signing key |
-| `DEBUG` | `True` | **Yes** — set `False` | Disables error pages in production |
-| `ALLOWED_HOSTS` | `*` | **Yes** | Comma-separated hostnames |
-| `DATABASE_URL` | *(SQLite fallback)* | **Yes** | Full PostgreSQL connection string |
-| `DEFAULT_FROM_EMAIL` | *(unset)* | Yes (email features) | Sender address for notifications |
-| `SITE_URL` | *(unset)* | Yes (email features) | Base URL for links inside emails |
-| `CUSTOM_DATABASE` | *(unset)* | Alternative | Set to `postgresql` to use separate `DB_*` vars |
+| Variable             | Default             | Prod required?        | Description                                     |
+| -------------------- | ------------------- | --------------------- | ----------------------------------------------- |
+| `SECRET_KEY`         | insecure dev key    | **Yes**               | Django cryptographic signing key                |
+| `DEBUG`              | `True`              | **Yes** — set `False` | Disables error pages in production              |
+| `ALLOWED_HOSTS`      | `*`                 | **Yes**               | Comma-separated hostnames                       |
+| `DATABASE_URL`       | *(SQLite fallback)* | **Yes**               | Full PostgreSQL connection string               |
+| `DEFAULT_FROM_EMAIL` | *(unset)*           | Yes (email features)  | Sender address for notifications                |
+| `SITE_URL`           | *(unset)*           | Yes (email features)  | Base URL for links inside emails                |
+| `CUSTOM_DATABASE`    | *(unset)*           | Alternative           | Set to `postgresql` to use separate `DB_*` vars |
 
 When `CUSTOM_DATABASE=postgresql`, also provide: `DB_NAME`, `DB_USER`, `PASSWORD`, `DB_HOST`, `DB_PORT`.
 
@@ -169,11 +171,11 @@ Supabase PostgreSQL
 
 ### Render web service settings
 
-| Setting | Value |
-|---|---|
+| Setting           | Value                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
 | **Build command** | `pip install -r requirements.txt && cd prj && python manage.py collectstatic --noinput && python manage.py migrate` |
-| **Start command** | `cd prj && gunicorn prj.wsgi:application` |
-| **Runtime** | Render auto-detects from `runtime.txt` → `python-3.13.5` |
+| **Start command** | `cd prj && gunicorn prj.wsgi:application`                                                                           |
+| **Runtime**       | Render auto-detects from `runtime.txt` → `python-3.13.5`                                                            |
 
 ### Required Render environment variables
 
@@ -205,10 +207,10 @@ Add your custom domain here if you configure one on Render.
 
 ### Cron jobs (planned)
 
-| Schedule | Command | Purpose |
-|---|---|---|
+| Schedule       | Command                                             | Purpose                   |
+| -------------- | --------------------------------------------------- | ------------------------- |
 | `*/15 * * * *` | `cd prj && python manage.py fetch_fio_transactions` | Import Fio Bank transfers |
-| `0 8 * * *` | `cd prj && python manage.py send_payment_reminders` | Daily reminder emails |
+| `0 8 * * *`    | `cd prj && python manage.py send_payment_reminders` | Daily reminder emails     |
 
 These management commands are not yet implemented. See `AI_CONTEXT.md` § 8.
 
@@ -240,17 +242,17 @@ python manage.py graph_models accounts finances communications importer \
 
 ## Technology stack
 
-| Layer | Technology |
-|---|---|
-| Language | Python 3.13.5 |
-| Framework | Django 6.x |
-| Database (dev) | SQLite |
-| Database (prod) | PostgreSQL via Supabase |
-| Web server | Gunicorn |
-| Static files | WhiteNoise (CompressedManifest) |
-| QR codes | `qrcode[pil]` + Pillow |
-| Hosting 01 | Render.com |
-| Hosting 02 | PythonAnywhere.com |
-| Hosting 03 | fund.svs.gyarab.cz |
-| Frontend | Bootstrap 5 (CDN) + custom CSS |
+| Layer           | Technology                      |
+| --------------- | ------------------------------- |
+| Language        | Python 3.13.5                   |
+| Framework       | Django 6.x                      |
+| Database (dev)  | SQLite                          |
+| Database (prod) | PostgreSQL via Supabase         |
+| Web server      | Gunicorn                        |
+| Static files    | WhiteNoise (CompressedManifest) |
+| QR codes        | `qrcode[pil]` + Pillow          |
+| Hosting 01      | Render.com                      |
+| Hosting 02      | PythonAnywhere.com              |
+| Hosting 03      | fund.svs.gyarab.cz              |
+| Frontend        | Bootstrap 5 (CDN) + custom CSS  |
 
