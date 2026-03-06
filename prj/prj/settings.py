@@ -45,7 +45,14 @@ INSTALLED_APPS = [
     'finances',        # money engine: payments, transactions, expenses
     'communications',  # emails, QR codes, notification log
     'importer',        # CSV student bulk-import
+    'django_extensions',
 ]
+
+# Tell django-extensions to use pydotplus
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
