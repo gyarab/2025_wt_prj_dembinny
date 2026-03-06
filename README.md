@@ -20,10 +20,13 @@ The architecture enforces the non‑negotiable rule: never query scoped financia
 
 ### User-flow
 
+![User flow](./user-flow.drawio.svg)
+
 
 
 ### Wireframe
 
+![Wireframe](./Wireframe.drawio.svg)
 
 ---
 
