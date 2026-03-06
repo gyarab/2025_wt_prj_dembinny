@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ title }} — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+<div class="col-12 col-md-8 col-lg-6">
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h4 class="mb-0 fw-bold">
+            {% if membership %}&#9998;{% else %}&#43;{% endif %}
+            {{ title }}
+        </h4>
+    </div>
+    <div class="card-body">
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger ms-1">*</span>{% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                {% endif %}
+
+                {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Group info hint -->
+            <div class="alert alert-light border mt-2 mb-3" style="font-size:.875rem;">
+                &#8505; Permission groups are created per class. If no groups exist yet for this class,
+                <a href="{% url 'fund_group_create' %}{% if school_class %}?class={{ school_class.pk }}{% endif %}">create one first</a>.
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-cfm">{{ submit_label }}</button>
+                <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+</div>
+</div>
+
+{% endblock %}

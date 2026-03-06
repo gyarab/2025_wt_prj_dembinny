@@ -48,22 +48,29 @@
 <!-- ── Tabs ───────────────────────────────────────────────────────────────── -->
 <ul class="nav nav-tabs mb-3" id="dashTabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-students-btn" data-bs-toggle="tab" data-bs-target="#tab-students" type="button">👥 Students</button>
+        <button class="nav-link active" id="tab-students-btn" data-bs-toggle="tab" data-bs-target="#tab-students" type="button">&#128101; Students</button>
     </li>
+    {% if membership.can_manage_payment_requests %}
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-requests-btn" data-bs-toggle="tab" data-bs-target="#tab-requests" type="button">📋 Payment Requests</button>
+        <button class="nav-link" id="tab-requests-btn" data-bs-toggle="tab" data-bs-target="#tab-requests" type="button">&#128203; Payment Requests</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-pending-btn" data-bs-toggle="tab" data-bs-target="#tab-pending" type="button">
-            ⏳ Pending
+            &#9203; Pending
             {% with total=submitted_items|length|add:missing_items|length %}
             {% if total %}<span class="badge bg-warning text-dark ms-1">{{ total }}</span>{% endif %}
             {% endwith %}
         </button>
     </li>
+    {% endif %}
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-expenses-btn" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">💸 Expenses</button>
+        <button class="nav-link" id="tab-expenses-btn" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">&#128184; Expenses</button>
     </li>
+    {% if membership and membership.can_view_bank_account or user.is_system_admin %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-bank-btn" data-bs-toggle="tab" data-bs-target="#tab-bank" type="button">&#127974; Bank Account</button>
+    </li>
+    {% endif %}
 </ul>
 
 <div class="tab-content" id="dashTabContent">
@@ -126,8 +133,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    {% if membership.can_manage_payment_requests %}
                                     {% if row.missing_count > 0 or row.pending_count > 0 %}
-                                    <a href="{% url 'log_transaction' %}?student={{ row.student.pk }}" class="btn btn-sm btn-outline-secondary" title="Log a transfer for this student">💳</a>
+                                    <a href="{% url 'log_transaction' %}?student={{ row.student.pk }}" class="btn btn-sm btn-outline-secondary" title="Log a transfer for this student">&#128179;</a>
+                                    {% endif %}
                                     {% endif %}
                                 </td>
                             </tr>
@@ -143,10 +152,11 @@
     </div>
 
     <!-- ── TAB: Payment Requests ─────────────────────────────────────────── -->
+    {% if membership.can_manage_payment_requests %}
     <div class="tab-pane fade" id="tab-requests" role="tabpanel">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 fw-bold">📋 Payment Requests</h5>
+                <h5 class="mb-0 fw-bold">&#128203; Payment Requests</h5>
                 <a href="{% url 'create_payment_request' %}" class="btn btn-cfm btn-sm">+ New Request</a>
             </div>
             <div class="card-body p-0">
@@ -219,13 +229,15 @@
             </div>
         </div>
     </div>
+    {% endif %}{# membership.can_manage_payment_requests — Payment Requests tab #}
 
     <!-- ── TAB: Pending Transactions ─────────────────────────────────────── -->
+    {% if membership.can_manage_payment_requests %}
     <div class="tab-pane fade" id="tab-pending" role="tabpanel">
         <div class="card shadow-sm border-0 mb-3">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 fw-bold">⏳ Payments to Process</h5>
-                <a href="{% url 'log_transaction' %}" class="btn btn-cfm btn-sm">💳 Log Transfer</a>
+                <h5 class="mb-0 fw-bold">&#9203; Payments to Process</h5>
+                <a href="{% url 'log_transaction' %}" class="btn btn-cfm btn-sm">&#128179; Log Transfer</a>
             </div>
             <div class="card-body">
 
@@ -325,12 +337,13 @@
             </div>
         </div>
     </div>
+    {% endif %}{# membership.can_manage_payment_requests — Pending tab #}
 
     <!-- ── TAB: Expenses ─────────────────────────────────────────────────── -->
     <div class="tab-pane fade" id="tab-expenses" role="tabpanel">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 fw-bold">💸 Fund Expenses</h5>
+                <h5 class="mb-0 fw-bold">&#128184; Fund Expenses</h5>
                 <a href="{% url 'log_expense' %}" class="btn btn-cfm btn-sm">+ Log Expense</a>
             </div>
             <div class="card-body p-0">
@@ -387,6 +400,66 @@
             </div>
         </div>
     </div>
+
+    <!-- ── TAB: Bank Account ──────────────────────────────────────────────── -->
+    {% if membership and membership.can_view_bank_account or user.is_system_admin %}
+    <div class="tab-pane fade" id="tab-bank" role="tabpanel">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-bold">&#127974; Class Bank Account</h5>
+                <a href="{% url 'manage_bank_account' %}" class="btn btn-cfm btn-sm">&#9998; Edit Bank Account</a>
+            </div>
+            <div class="card-body">
+                {% with account=school_class.bank_account %}
+                {% if account %}
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Account Holder</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ account.owner_name }}</dd>
+
+                    <dt class="col-sm-4 text-muted">Account Number</dt>
+                    <dd class="col-sm-8"><code>{{ account.account_number }}</code></dd>
+
+                    {% if account.iban %}
+                    <dt class="col-sm-4 text-muted">IBAN</dt>
+                    <dd class="col-sm-8"><code>{{ account.iban }}</code></dd>
+                    {% endif %}
+
+                    {% if account.bic %}
+                    <dt class="col-sm-4 text-muted">BIC / SWIFT</dt>
+                    <dd class="col-sm-8"><code>{{ account.bic }}</code></dd>
+                    {% endif %}
+
+                    {% if account.bank_name %}
+                    <dt class="col-sm-4 text-muted">Bank</dt>
+                    <dd class="col-sm-8">{{ account.bank_name }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-4 text-muted">Active</dt>
+                    <dd class="col-sm-8">
+                        {% if account.is_active %}
+                        <span class="badge bg-success">Yes — visible to students</span>
+                        {% else %}
+                        <span class="badge bg-secondary">No — hidden from students</span>
+                        {% endif %}
+                    </dd>
+
+                    {% if account.note %}
+                    <dt class="col-sm-4 text-muted">Note</dt>
+                    <dd class="col-sm-8">{{ account.note|linebreaksbr }}</dd>
+                    {% endif %}
+                </dl>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <div class="fs-2 mb-2">🏦</div>
+                    <p class="mb-3">No bank account configured for this class yet.</p>
+                    <a href="{% url 'manage_bank_account' %}" class="btn btn-cfm">Set Up Bank Account</a>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    {% endif %}{# full / admin — Bank Account tab #}
 
 </div>
 

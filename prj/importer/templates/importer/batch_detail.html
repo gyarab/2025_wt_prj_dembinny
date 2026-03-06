@@ -1,0 +1,73 @@
+{% extends 'core/base.html' %}
+{% block title %}Import Batch #{{ batch.pk }} — Class Fund Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-xl-11">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 fw-bold mb-0">📦 Batch #{{ batch.pk }} — {{ batch.school_class }}</h1>
+        <a href="{% url 'importer:batch_list' %}" class="btn btn-outline-secondary btn-sm">← History</a>
+    </div>
+
+    <dl class="row small mb-4">
+        <dt class="col-sm-3">Uploaded by</dt>
+        <dd class="col-sm-9">{{ batch.uploaded_by.get_full_name|default:batch.uploaded_by.username }}</dd>
+        <dt class="col-sm-3">File</dt>
+        <dd class="col-sm-9"><code>{{ batch.original_filename|default:'—' }}</code></dd>
+        <dt class="col-sm-3">Created</dt>
+        <dd class="col-sm-9">{{ batch.created_at }}</dd>
+        <dt class="col-sm-3">Completed</dt>
+        <dd class="col-sm-9">{{ batch.completed_at|default:'—' }}</dd>
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+            {% if batch.status == 'completed' %}<span class="badge bg-success">Completed</span>
+            {% elif batch.status == 'failed' %}<span class="badge bg-danger">Failed</span>
+            {% else %}<span class="badge bg-secondary">{{ batch.status }}</span>{% endif %}
+        </dd>
+    </dl>
+
+    <div class="d-flex gap-2 mb-3">
+        <span class="badge bg-success">✅ {{ batch.imported }} imported</span>
+        <span class="badge bg-secondary">⏭ {{ batch.skipped }} skipped</span>
+        <span class="badge bg-danger">❌ {{ batch.errors }} errors</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle small">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Username</th>
+                    <th>VS</th>
+                    <th>Parent Email</th>
+                    <th>Outcome</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in batch.rows.all %}
+                <tr class="{% if row.outcome == 'error' %}table-danger{% elif row.outcome == 'skipped' %}table-warning{% endif %}">
+                    <td class="text-muted">{{ row.row_number }}</td>
+                    <td>{{ row.first_name }}</td>
+                    <td>{{ row.last_name }}</td>
+                    <td><code>{{ row.username|default:'—' }}</code></td>
+                    <td><code>{{ row.variable_symbol|default:'—' }}</code></td>
+                    <td>{{ row.parent_email|default:'—' }}</td>
+                    <td>
+                        {% if row.outcome == 'imported' %}<span class="badge bg-success">imported</span>
+                        {% elif row.outcome == 'skipped' %}<span class="badge bg-secondary">skipped</span>
+                        {% else %}<span class="badge bg-danger">error</span>{% endif %}
+                    </td>
+                    <td>{{ row.message }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</div>
+{% endblock %}

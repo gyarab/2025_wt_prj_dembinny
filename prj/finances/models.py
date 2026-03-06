@@ -44,6 +44,12 @@ class BankAccount(models.Model):
         blank=True,
         help_text='IBAN (optional, used in the QR code).',
     )
+    bic = models.CharField(
+        max_length=11,
+        blank=True,
+        verbose_name='BIC / SWIFT',
+        help_text='BIC/SWIFT code (optional, e.g. "GIBACZPX").',
+    )
     bank_name = models.CharField(
         max_length=100,
         blank=True,
@@ -92,6 +98,14 @@ class PaymentRequest(models.Model):
         null=True,
         blank=True,
         help_text='Optional deadline for payment.',
+    )
+    school_class = models.ForeignKey(
+        'accounts.SchoolClass',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='payment_requests',
+        help_text='The class this payment request belongs to.',
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -160,6 +174,14 @@ class Transaction(models.Model):
         on_delete=models.CASCADE,
         related_name='transactions',
     )
+    school_class = models.ForeignKey(
+        'accounts.SchoolClass',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transactions',
+        help_text='The class this transaction belongs to.',
+    )
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -209,6 +231,14 @@ class Expense(models.Model):
         max_length=20,
         choices=Category.choices,
         default=Category.OTHER,
+    )
+    school_class = models.ForeignKey(
+        'accounts.SchoolClass',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='expenses',
+        help_text='The class this expense belongs to.',
     )
     spent_at = models.DateField(default=timezone.now)
     recorded_by = models.ForeignKey(

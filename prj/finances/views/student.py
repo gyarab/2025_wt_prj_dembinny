@@ -3,6 +3,8 @@ finances/views/student.py
 ──────────────────────────
 Student-facing views: dashboard, pending payments, payment info / QR,
 and the budget transparency page.
+
+All data is scoped to the student's own SchoolClass (via StudentProfile).
 """
 
 from itertools import groupby
@@ -12,7 +14,7 @@ from django.db.models import Sum
 from django.shortcuts import render
 
 from ..models import BankAccount, Expense, Transaction
-from .utils import attach_qr_to_requests, generate_spd_qr, get_student_payment_data
+from .utils import attach_qr_to_requests, generate_spd_qr, get_class_bank_account, get_student_payment_data
 
 
 @login_required
@@ -20,11 +22,15 @@ def dashboard_view(req):
     """
     Personal dashboard for any logged-in user.
     Shows summary cards and the most recent 5 transactions / 5 expenses.
+    Expenses are scoped to the student's own class.
     """
     context = get_student_payment_data(req.user)
+    school_class = context.get('school_class')
     context['my_transactions'] = context['my_transactions'][:5]
     context['recent_expenses'] = (
-        Expense.objects.filter(is_published=True).order_by('-spent_at')[:5]
+        Expense.objects
+        .filter(is_published=True, school_class=school_class)
+        .order_by('-spent_at')[:5]
     )
     return render(req, 'finances/dashboard.html', context)
 
@@ -35,8 +41,9 @@ def pending_payments_view(req):
     Dedicated page listing every payment request the student still owes,
     with per-request SPAYD QR codes.
     """
-    data    = get_student_payment_data(req.user)
-    account = BankAccount.objects.filter(is_active=True).order_by('-updated_at').first()
+    data         = get_student_payment_data(req.user)
+    school_class = data.get('school_class')
+    account      = get_class_bank_account(school_class)
 
     unpaid_list   = list(data['unpaid_requests'])
     awaiting_list = list(data['awaiting_requests'])
@@ -56,10 +63,13 @@ def pending_payments_view(req):
 @login_required
 def payment_info_view(req):
     """
-    Shows the class bank account details and a generic scannable QR code
-    (no amount pre-filled — students use this to find the account details).
+    Shows the class bank account details and a generic scannable QR code.
+    Uses the bank account linked to the student's own class.
     """
-    account = BankAccount.objects.filter(is_active=True).order_by('-updated_at').first()
+    school_class = getattr(
+        getattr(req.user, 'student_profile', None), 'school_class', None
+    )
+    account = get_class_bank_account(school_class)
     qr_base64 = None
     if account and account.account_number:
         account_id = account.iban.strip() or account.account_number.strip()
@@ -76,11 +86,16 @@ def payment_info_view(req):
 @login_required
 def budget_view(req):
     """
-    Transparency page: full timeline of published expenses grouped by month,
-    with running totals and a category breakdown.
+    Transparency page: full timeline of published expenses for the student's
+    class, grouped by month, with running totals and a category breakdown.
     """
+    school_class = getattr(
+        getattr(req.user, 'student_profile', None), 'school_class', None
+    )
+
     expenses = list(
-        Expense.objects.filter(is_published=True)
+        Expense.objects
+        .filter(is_published=True, school_class=school_class)
         .select_related('recorded_by')
         .order_by('-spent_at', '-created_at')
     )
@@ -99,13 +114,15 @@ def budget_view(req):
         })
 
     category_totals = (
-        Expense.objects.filter(is_published=True)
+        Expense.objects
+        .filter(is_published=True, school_class=school_class)
         .values('category')
         .annotate(total=Sum('amount'))
         .order_by('-total')
     )
     total_spent = (
-        Expense.objects.filter(is_published=True)
+        Expense.objects
+        .filter(is_published=True, school_class=school_class)
         .aggregate(s=Sum('amount'))['s'] or 0
     )
     category_labels = dict(Expense.Category.choices)

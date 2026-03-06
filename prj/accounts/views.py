@@ -2,8 +2,8 @@
 accounts/views.py
 ─────────────────
 Authentication views: login, logout, password change.
-CSV bulk-import of students lives here too (future).
 
+CSV bulk-import of students has moved to the dedicated `importer` app.
 All templates are resolved from accounts/templates/accounts/.
 """
 
@@ -80,3 +80,4 @@ def password_change_view(req):
 def password_change_done_view(req):
     """Confirmation page shown after a successful password change."""
     return render(req, 'accounts/password_change_done.html')
+

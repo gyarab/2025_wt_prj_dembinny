@@ -9,7 +9,7 @@ from django import forms
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Expense, PaymentRequest, Transaction
+from .models import BankAccount, Expense, PaymentRequest, Transaction
 
 
 class PaymentRequestForm(forms.ModelForm):
@@ -51,6 +51,9 @@ class PaymentRequestForm(forms.ModelForm):
 class LogTransactionForm(forms.Form):
     """
     Treasurer form to manually log an incoming bank transfer.
+    Accepts a `student_queryset` kwarg so the view can restrict the student
+    list to its own class.  Accepts a `pr_queryset` kwarg to restrict the
+    payment-request list to the same class.
     """
     from django.contrib.auth import get_user_model
     User = get_user_model()
@@ -86,13 +89,17 @@ class LogTransactionForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        pr_queryset = kwargs.pop('pr_queryset', None)
+        student_queryset = kwargs.pop('student_queryset', None)
+        pr_queryset      = kwargs.pop('pr_queryset', None)
         super().__init__(*args, **kwargs)
         from django.contrib.auth import get_user_model
         User = get_user_model()
+        # Use the caller-supplied (class-scoped) queryset if given;
+        # fall back to all active users only as a last resort.
         self.fields['student'].queryset = (
-            User.objects.filter(is_active=True)
-            .order_by('last_name', 'first_name', 'username')
+            student_queryset
+            if student_queryset is not None
+            else User.objects.filter(is_active=True).order_by('last_name', 'first_name', 'username')
         )
         if pr_queryset is not None:
             self.fields['payment_request'].queryset = pr_queryset
@@ -145,3 +152,52 @@ class ExpenseForm(forms.ModelForm):
         self.fields['spent_at'].input_formats = ['%Y-%m-%d']
         if not self.data.get('spent_at') and not self.instance.pk:
             self.fields['spent_at'].initial = timezone.localdate().strftime('%Y-%m-%d')
+
+
+class BankAccountForm(forms.ModelForm):
+    """
+    Lets a treasurer set up or update their class bank account details.
+    The `school_class` field is intentionally excluded — the view stamps it
+    automatically from the logged-in user's managed class.
+    """
+
+    class Meta:
+        model  = BankAccount
+        fields = [
+            'owner_name', 'account_number', 'iban', 'bic',
+            'bank_name', 'note', 'is_active',
+        ]
+        widgets = {
+            'owner_name':     forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'Class 4.B Fund'",
+            }),
+            'account_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. '123456789/0800'",
+            }),
+            'iban':           forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'CZ6508000000192000145399'",
+            }),
+            'bic':            forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'GIBACZPX'",
+            }),
+            'bank_name':      forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. 'Česká spořitelna'",
+            }),
+            'note':           forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Any extra instructions for students (optional).',
+            }),
+            'is_active':      forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean_iban(self):
+        return self.cleaned_data.get('iban', '').strip().upper()
+
+    def clean_bic(self):
+        return self.cleaned_data.get('bic', '').strip().upper()

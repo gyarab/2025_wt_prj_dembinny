@@ -18,6 +18,7 @@ from .treasurer import (
     delete_expense_view,
     log_expense_view,
     log_transaction_view,
+    manage_bank_account_view,
     student_requests_json,
     treasurer_dashboard_view,
 )
@@ -36,4 +37,5 @@ __all__ = [
     'student_requests_json',
     'log_expense_view',
     'delete_expense_view',
+    'manage_bank_account_view',
 ]

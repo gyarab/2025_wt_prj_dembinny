@@ -28,6 +28,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://two025-wt-prj-dembinny.onrender.com',
 ]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
 # ── Application definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -41,6 +44,7 @@ INSTALLED_APPS = [
     'core',            # public pages, utilities, custom error handlers
     'finances',        # money engine: payments, transactions, expenses
     'communications',  # emails, QR codes, notification log
+    'importer',        # CSV student bulk-import
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,78 @@
+{% extends 'core/base.html' %}
+{% block title %}Import Students — Class Fund Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+
+    <h1 class="h3 fw-bold mb-1">📥 Import Students from CSV</h1>
+    <p class="text-muted mb-4">
+        Upload a CSV file to bulk-enrol students into a class.
+        A <strong>preview</strong> is shown before anything is saved.
+    </p>
+
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible fade show">
+        {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ form.school_class.label }}</label>
+                    {{ form.school_class }}
+                    {% if form.school_class.errors %}
+                    <div class="text-danger small mt-1">{{ form.school_class.errors|join:" " }}</div>
+                    {% endif %}
+                    <div class="form-text">{{ form.school_class.help_text }}</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">{{ form.csv_file.label }}</label>
+                    {{ form.csv_file }}
+                    {% if form.csv_file.errors %}
+                    <div class="text-danger small mt-1">{{ form.csv_file.errors|join:" " }}</div>
+                    {% endif %}
+                    <div class="form-text">{{ form.csv_file.help_text|safe }}</div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-cfm">Preview Import →</button>
+                    <a href="{% url 'treasurer_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# ── Format reference ── #}
+    <div class="card border-0 bg-light">
+        <div class="card-body p-3">
+            <h6 class="fw-semibold mb-2">📄 CSV Column Reference</h6>
+            <table class="table table-sm table-bordered small mb-2">
+                <thead class="table-dark">
+                    <tr><th>Column</th><th>Required?</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>first_name</code></td><td>✅ Yes</td><td></td></tr>
+                    <tr><td><code>last_name</code></td><td>✅ Yes</td><td></td></tr>
+                    <tr><td><code>username</code></td><td>No</td><td>Auto-derived (e.g. "jnovak") if absent</td></tr>
+                    <tr><td><code>variable_symbol</code></td><td>No</td><td>1–10 digits; auto-generated from class prefix if absent</td></tr>
+                    <tr><td><code>parent_email</code></td><td>No</td><td>Creates / links a Parent account</td></tr>
+                    <tr><td><code>parent_first_name</code></td><td>No</td><td></td></tr>
+                    <tr><td><code>parent_last_name</code></td><td>No</td><td></td></tr>
+                    <tr><td><code>password</code></td><td>No</td><td>Random 12-char password used if absent</td></tr>
+                </tbody>
+            </table>
+            <p class="small text-muted mb-0">
+                Example: <code>Jan,Novák,,04001,jan.parent@email.cz,Martin,Novák,</code>
+            </p>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
