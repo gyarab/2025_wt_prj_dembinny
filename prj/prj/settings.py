@@ -9,7 +9,24 @@ import dj_database_url
 from dotenv import load_dotenv
 
 # ── Load .env file when running locally ──────────────────────────────────────
-load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env')
+env_path = Path(__file__).resolve().parent.parent.parent / '.env'
+file_exists = True
+# Load .env from the repository root if present. Coerce to string for compatibility
+# with different python-dotenv versions.
+if env_path.exists():
+    load_dotenv(dotenv_path=str(env_path))
+else:
+    # Fallback: project root (one level up) in case the layout differs
+    alt_env = Path(__file__).resolve().parent.parent / '.env'
+    if alt_env.exists():
+        load_dotenv(dotenv_path=str(alt_env))
+    else:
+        print('No .env file found.')
+        file_exists = False
+
+# Environment variables are strings; compare against the string "True".
+if os.environ.get('DEBUG', 'True') == 'True' and file_exists:
+    print('DEBUG mode on!!!')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -82,8 +99,8 @@ WSGI_APPLICATION = 'prj.wsgi.application'
 # Priority: DATABASE_URL env var (Render / Supabase / PythonAnywhere / school server)
 # Fallback:  local SQLite for development
 
-_database_url = os.environ.get('DATABASE_URL')
-_full_database_setup = os.environ.get('CUSTOM_DATABASE')
+_database_url = os.environ.get('DATABASE_URL', '')
+_full_database_setup = os.environ.get('CUSTOM_DATABASE', '')
 
 if _full_database_setup:
     DATABASES = {
@@ -129,7 +146,17 @@ USE_TZ = True
 # ── Static files ──────────────────────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'core' / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'          # collectstatic target
+
+# Dynamic STATIC_ROOT
+PROD_STATIC_PATH = Path("/var/caddy.root.d/fund.svs.gyarab.cz/static/")
+
+if PROD_STATIC_PATH.exists() or os.name != 'nt': 
+    # If the path exists OR we are on Linux (not Windows 'nt')
+    STATIC_ROOT = PROD_STATIC_PATH
+else:
+    # Local development (Windows/macOS)
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── Custom user model ─────────────────────────────────────────────────────────
