@@ -1,0 +1,104 @@
+{% extends 'core/base.html' %}
+{% block title %}Preview Import — Class Fund Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+
+        <h1 class="h3 fw-bold mb-1">📋 Import Preview — {{ school_class }}</h1>
+        <p class="text-muted mb-3">
+            Review the rows below.
+            <strong>Rows with errors will be skipped.</strong>
+            Click <em>Confirm Import</em> to save all valid rows.
+        </p>
+
+        {# ── Summary badges ── #}
+        <div class="d-flex gap-2 flex-wrap mb-4">
+            <span class="badge bg-success fs-6 px-3 py-2">
+                ✅ {{ parse_result.valid_rows|length }} valid
+            </span>
+            {% if parse_result.has_errors %}
+            <span class="badge bg-danger fs-6 px-3 py-2">
+                ❌ {{ parse_result.error_rows|length }} with errors (will be skipped)
+            </span>
+            {% endif %}
+        </div>
+
+        {% if parse_result.has_errors %}
+        <div class="alert alert-warning">
+            <strong>Some rows contain errors.</strong>
+            Fix the CSV and re-upload, or proceed — only valid rows will be imported.
+        </div>
+        {% endif %}
+
+        {# ── Preview table ── #}
+        <div class="table-responsive mb-4">
+            <table class="table table-sm table-hover align-middle small">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Username</th>
+                        <th>VS</th>
+                        <th>Parent Email</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in parse_result.rows %}
+                    <tr class="{% if not row.is_valid %}table-danger{% endif %}">
+                        <td class="text-muted">{{ row.row_number }}</td>
+                        <td>{{ row.first_name }}</td>
+                        <td>{{ row.last_name }}</td>
+                        <td><code>{{ row.username }}</code></td>
+                        <td>
+                            {% if row.variable_symbol %}
+                            <code>{{ row.variable_symbol }}</code>
+                            {% else %}
+                            <span class="text-muted fst-italic">auto</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.parent_email %}
+                            {{ row.parent_email }}
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.is_valid %}
+                            <span class="text-success fw-semibold">✅ OK</span>
+                            {% else %}
+                            <span class="text-danger fw-semibold">❌</span>
+                            <ul class="mb-0 ps-3">
+                                {% for err in row.errors %}
+                                <li>{{ err }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Action buttons ── #}
+        <div class="d-flex gap-2">
+            {% if parse_result.valid_rows %}
+            <form method="post" action="{% url 'import_students_confirm' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-cfm">
+                    ✅ Confirm — import {{ parse_result.valid_rows|length }} student(s)
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'import_students' %}" class="btn btn-outline-secondary">
+                ↩ Upload a different file
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

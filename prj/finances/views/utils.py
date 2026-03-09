@@ -31,14 +31,33 @@ def treasurer_required(view_fn):
     """
     Decorator: unauthenticated users → login, non-treasurers → dashboard
     with an error message.
+
+    Grants access to any treasurer tier (full / accountant / bookkeeper)
+    as well as System Admin and Django superusers.
     """
     @wraps(view_fn)
     def wrapper(req, *args, **kwargs):
         if not req.user.is_authenticated:
             return redirect('login')
-        if not req.user.is_treasurer:
+        if not (req.user.is_treasurer or req.user.is_system_admin or req.user.is_superuser):
             messages.error(req, 'Access denied – treasurer only.')
             return redirect('dashboard')
+        return view_fn(req, *args, **kwargs)
+    return wrapper
+
+
+def payment_requests_required(view_fn):
+    """
+    Decorator: only Treasurer (Full / Accountant) + System Admin.
+    Bookkeeper-tier treasurers are denied (they can only log expenses).
+    """
+    @wraps(view_fn)
+    def wrapper(req, *args, **kwargs):
+        if not req.user.is_authenticated:
+            return redirect('login')
+        if not (req.user.can_manage_payment_requests or req.user.is_superuser):
+            messages.error(req, 'Access denied – you can log expenses but not manage payment requests.')
+            return redirect('treasurer_dashboard')
         return view_fn(req, *args, **kwargs)
     return wrapper
 
@@ -57,11 +76,65 @@ def require_POST_or_405(view_fn):
 
 def get_treasurer_class(user):
     """
-    Return the SchoolClass this treasurer manages, or None if they have no
-    class assigned yet.  Always use this to scope treasurer querysets.
+    Return the primary SchoolClass for this treasurer, or None.
+
+    Resolution order:
+      1. A ClassMembership row for this user (picks the first by class name).
+      2. Fallback: SchoolClass where user is the primary ``teacher`` FK.
+      3. None – user has no class assigned.
+
+    Always use this to scope treasurer querysets so a treasurer can only
+    read/write data belonging to their own class.
     """
-    from accounts.models import SchoolClass
+    from accounts.models import ClassMembership, SchoolClass
+
+    # Prefer ClassMembership (supports multiple-treasurer-per-class)
+    membership = (
+        ClassMembership.objects
+        .filter(user=user)
+        .select_related('school_class')
+        .order_by('school_class__name')
+        .first()
+    )
+    if membership:
+        return membership.school_class
+
+    # Legacy fallback: primary teacher FK
     return SchoolClass.objects.filter(teacher=user).first()
+
+
+def get_treasurer_membership(user, school_class):
+    """
+    Return the ClassMembership for *user* in *school_class*, or None.
+    System Admins and superusers implicitly have Full-tier access.
+    """
+    from accounts.models import ClassMembership
+
+    if user.is_system_admin or user.is_superuser:
+        # Return a synthetic membership-like object with full permissions
+        return _AdminMembership()
+
+    return ClassMembership.objects.filter(user=user, school_class=school_class).first()
+
+
+class _AdminMembership:
+    """Sentinel object granting all ClassMembership permissions to admins."""
+
+    @property
+    def can_log_expenses(self):
+        return True
+
+    @property
+    def can_manage_payment_requests(self):
+        return True
+
+    @property
+    def can_view_bank_account(self):
+        return True
+
+    @property
+    def can_manage_students(self):
+        return True
 
 
 def get_class_students(school_class):

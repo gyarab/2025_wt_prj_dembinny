@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ title }} — Class Fund Manager{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+<div class="col-12 col-md-8 col-lg-6">
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h4 class="mb-0 fw-bold">
+            {% if group %}&#9998;{% else %}&#43;{% endif %}
+            {{ title }}
+            {% if school_class %}
+            <span class="text-muted fw-normal fs-6">— {{ school_class.name }}</span>
+            {% endif %}
+        </h4>
+    </div>
+    <div class="card-body">
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% for field in form %}
+            {% if field.is_hidden %}
+                {{ field }}
+            {% else %}
+            <div class="mb-3">
+                {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check form-switch">
+                    {{ field }}
+                    <label class="form-check-label fw-semibold" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+                    {% if field.help_text %}
+                    <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger ms-1">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                {% endif %}
+                {% endif %}
+
+                {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger mt-2">
+                {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Permission summary reference -->
+            <div class="alert alert-light border mt-3 mb-4" style="font-size:.875rem;">
+                <strong>&#8505; What each permission does:</strong>
+                <ul class="mb-0 mt-1">
+                    <li><strong>Log expenses</strong> — can record new expense entries</li>
+                    <li><strong>Manage payment requests</strong> — can create, edit, and confirm payment requests from students</li>
+                    <li><strong>View / edit bank account</strong> — can see IBAN, account number, and change bank account details</li>
+                    <li><strong>Manage students</strong> — can add, edit, or remove student profiles from the class</li>
+                </ul>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-cfm">{{ submit_label }}</button>
+                <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+</div>
+</div>
+
+{% endblock %}

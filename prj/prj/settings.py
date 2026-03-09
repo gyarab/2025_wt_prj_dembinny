@@ -28,6 +28,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://two025-wt-prj-dembinny.onrender.com',
 ]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
 # ── Application definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -41,7 +44,15 @@ INSTALLED_APPS = [
     'core',            # public pages, utilities, custom error handlers
     'finances',        # money engine: payments, transactions, expenses
     'communications',  # emails, QR codes, notification log
+    'importer',        # CSV student bulk-import
+    'django_extensions',
 ]
+
+# Tell django-extensions to use pydotplus
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
