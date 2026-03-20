@@ -77,6 +77,7 @@ class LogTransactionForm(forms.Form):
         label='Transfer date & time',
         widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         input_formats=['%Y-%m-%dT%H:%M'],
+        initial=timezone.localtime
     )
     note = forms.CharField(
         required=False, label='Note (optional)',

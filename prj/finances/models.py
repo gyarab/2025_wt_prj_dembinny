@@ -168,6 +168,7 @@ class Transaction(models.Model):
         PENDING   = 'pending',   'Pending'
         CONFIRMED = 'confirmed', 'Confirmed'
         REJECTED  = 'rejected',  'Rejected'
+        CANCEL = 'cancel', 'Cancel'
 
     payment_request = models.ForeignKey(
         PaymentRequest,
