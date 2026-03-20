@@ -129,7 +129,10 @@ beyond the above are stored by this application.
 ## 9. How is my data secured?
 
 - **Passwords** are cryptographically hashed using Django's default PBKDF2-SHA256
-  algorithm. Plain-text passwords are never stored anywhere.
+  algorithm before they are stored in the login database. In limited
+  administrative workflows (such as bulk account imports), an initial
+  password may be handled in plain text for account creation, but it is not
+  retained longer than necessary for that process.
 - **Database connections** between the app and Supabase PostgreSQL use TLS
   encryption in transit.
 - **Access control** is enforced at every page: you can only see your own
