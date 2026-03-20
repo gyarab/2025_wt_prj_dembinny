@@ -64,6 +64,12 @@ INSTALLED_APPS = [
     'importer',        # CSV student bulk-import
 ]
 
+# Tell django-extensions to use pydotplus
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',   # serve static files in production

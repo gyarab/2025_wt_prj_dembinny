@@ -253,6 +253,7 @@ def execute_import(
                 username=student_user.username,
                 variable_symbol=profile.variable_symbol,
                 parent_email=row.parent_email,
+                plain_password=plain_password,   # empty for pre-existing accounts
                 outcome=ImportRow.Outcome.IMPORTED,
                 message=notes,
             )
