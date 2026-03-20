@@ -264,11 +264,7 @@ def generate_spd_qr(
     """
     import base64
     import io
-
-    try:
-        import qrcode
-    except Exception:
-        return None
+    import qrcode
 
     parts = ['SPD*1.0', f'ACC:{account_id}', 'CC:CZK']
     if amount is not None:
