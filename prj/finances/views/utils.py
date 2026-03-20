@@ -7,11 +7,11 @@ Nothing here imports from other view modules (no circular imports).
 
 from functools import wraps
 
-from django.contrib import messages
 from django.db.models import Q, Sum
 from django.http import HttpResponseNotAllowed
-from django.shortcuts import redirect
 from django.utils import timezone
+
+from accounts.decorators import payment_requests_required, treasurer_required  # noqa: F401
 
 from ..models import BankAccount, PaymentRequest, Transaction
 
@@ -26,40 +26,9 @@ def add_form_control_class(form):
 
 
 # ── Access control ────────────────────────────────────────────────────────────
-
-def treasurer_required(view_fn):
-    """
-    Decorator: unauthenticated users → login, non-treasurers → dashboard
-    with an error message.
-
-    Grants access to any treasurer tier (full / accountant / bookkeeper)
-    as well as System Admin and Django superusers.
-    """
-    @wraps(view_fn)
-    def wrapper(req, *args, **kwargs):
-        if not req.user.is_authenticated:
-            return redirect('login')
-        if not (req.user.is_treasurer or req.user.is_system_admin or req.user.is_superuser):
-            messages.error(req, 'Access denied – treasurer only.')
-            return redirect('dashboard')
-        return view_fn(req, *args, **kwargs)
-    return wrapper
-
-
-def payment_requests_required(view_fn):
-    """
-    Decorator: only Treasurer (Full / Accountant) + System Admin.
-    Bookkeeper-tier treasurers are denied (they can only log expenses).
-    """
-    @wraps(view_fn)
-    def wrapper(req, *args, **kwargs):
-        if not req.user.is_authenticated:
-            return redirect('login')
-        if not (req.user.can_manage_payment_requests or req.user.is_superuser):
-            messages.error(req, 'Access denied – you can log expenses but not manage payment requests.')
-            return redirect('treasurer_dashboard')
-        return view_fn(req, *args, **kwargs)
-    return wrapper
+# treasurer_required and payment_requests_required are imported from
+# accounts.decorators (the single source of truth) and re-exported here
+# for backwards-compatible imports in this package.
 
 
 def require_POST_or_405(view_fn):
@@ -107,6 +76,8 @@ def get_treasurer_membership(user, school_class):
     """
     Return the ClassMembership for *user* in *school_class*, or None.
     System Admins and superusers implicitly have Full-tier access.
+    Primary class teachers (via SchoolClass.teacher) also receive Full-tier
+    access when no explicit ClassMembership row exists for them.
     """
     from accounts.models import ClassMembership
 
@@ -114,7 +85,16 @@ def get_treasurer_membership(user, school_class):
         # Return a synthetic membership-like object with full permissions
         return _AdminMembership()
 
-    return ClassMembership.objects.filter(user=user, school_class=school_class).first()
+    membership = ClassMembership.objects.filter(user=user, school_class=school_class).first()
+    if membership:
+        return membership
+
+    # Primary teacher fallback: grant full permissions when the user is the
+    # class's designated teacher but has no explicit ClassMembership row.
+    if school_class is not None and school_class.teacher_id == user.pk:
+        return _AdminMembership()
+
+    return None
 
 
 class _AdminMembership:

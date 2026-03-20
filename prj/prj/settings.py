@@ -45,8 +45,12 @@ INSTALLED_APPS = [
     'finances',        # money engine: payments, transactions, expenses
     'communications',  # emails, QR codes, notification log
     'importer',        # CSV student bulk-import
-    'django_extensions',
 ]
+
+# django_extensions is a development-only tool (graph_models, shell_plus, …).
+# Include it only when explicitly opted in via the DJANGO_EXTENSIONS env var.
+if os.environ.get('DJANGO_EXTENSIONS'):
+    INSTALLED_APPS.append('django_extensions')
 
 # Tell django-extensions to use pydotplus
 GRAPH_MODELS = {
