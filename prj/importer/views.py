@@ -161,7 +161,7 @@ def preview_view(req):
             rd['first_name']   = req.POST.get(f'first_name_{idx}',   rd['first_name']).strip()
             rd['last_name']    = req.POST.get(f'last_name_{idx}',    rd['last_name']).strip()
             rd['email']        = req.POST.get(f'email_{idx}',        rd['email']).strip()
-            rd['role']         = req.POST.get(f'role_{idx}',         rd['role']).strip().lower()
+            rd['role']         = req.POST.get(f'role_{idx}',         rd['role']).strip()
             rd['variable_symbol'] = req.POST.get(f'vs_{idx}',        rd['variable_symbol']).strip()
             rd['parent_email'] = req.POST.get(f'parent_email_{idx}', rd['parent_email']).strip()
 
@@ -265,7 +265,7 @@ def batch_detail_view(req, batch_id: int):
 
 @import_required
 def batch_list_view(req):
-    """List all past import batches for this treasurer's classes."""
+    """List all past import batches (system-wide, visible to System Admins only)."""
     batches = ImportBatch.objects.select_related('school_class', 'uploaded_by').all()
     return render(req, 'importer/batch_list.html', {'batches': batches})
 

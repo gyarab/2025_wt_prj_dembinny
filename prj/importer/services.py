@@ -152,16 +152,35 @@ def execute_import(
                 user_role = getattr(CustomUser.Role, row.role.upper(), CustomUser.Role.STUDENT)
 
             # ── Student user ──────────────────────────────────────────────────
-            username = _unique_username(row.username)
-            student_user, student_created = CustomUser.objects.get_or_create(
-                username=username,
-                defaults={
-                    'first_name': row.first_name,
-                    'last_name':  row.last_name,
-                    'email':      row.email,
-                    'role':       user_role,
-                },
-            )
+            # Look up by exact username first so we reuse an existing account
+            # rather than creating a suffixed duplicate.  Only call
+            # _unique_username when creating a genuinely new account.
+            if row.username:
+                try:
+                    student_user = CustomUser.objects.get(username=row.username)
+                    student_created = False
+                except CustomUser.DoesNotExist:
+                    username = _unique_username(row.username)
+                    student_user, student_created = CustomUser.objects.get_or_create(
+                        username=username,
+                        defaults={
+                            'first_name': row.first_name,
+                            'last_name':  row.last_name,
+                            'email':      row.email,
+                            'role':       user_role,
+                        },
+                    )
+            else:
+                username = _unique_username(row.username)
+                student_user, student_created = CustomUser.objects.get_or_create(
+                    username=username,
+                    defaults={
+                        'first_name': row.first_name,
+                        'last_name':  row.last_name,
+                        'email':      row.email,
+                        'role':       user_role,
+                    },
+                )
             if not student_created:
                 # Keep names and email fresh even for existing accounts
                 update_fields = ['first_name', 'last_name']

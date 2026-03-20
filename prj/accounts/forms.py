@@ -17,7 +17,7 @@ class StudentCSVImportForm(forms.Form):
     Phase-1 upload form: choose a class and upload a CSV file.
 
     The form validates the file is well-formed and returns the decoded rows
-    via ``cleaned_data['csv_rows']`` so the view can pass them to
+    via ``cleaned_data['csv_file']`` so the view can pass them to
     ``accounts.services.parse_student_csv()`` for a preview.
 
     CSV format

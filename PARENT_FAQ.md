@@ -7,15 +7,19 @@ If you cannot find the answer here, contact your child's class treasurer or teac
 
 ## 1. What is a Variable Symbol (VS) and why does my child have one?
 
-A **Variable Symbol** is a 5-digit number unique to your child.
+A **Variable Symbol** is a numeric payment reference unique to your child — a string
+of digits assigned by the system (its length can vary depending on how the class
+account is set up).
 Czech banks use it like a reference number — it tells the school fund treasurer
 exactly whose payment has arrived.
 
 Your child's VS is automatically assigned when they are registered in the system.
 You will find it pre-filled when you scan a SPAYD QR code (see question 2).
 
-**Example:** if the class prefix is `04` and your child is the third student
-registered, their VS is `04003`.
+**Example:** in many classes, if the class prefix is `04` and your child is the
+third student registered, their VS is `04003`. In other classes, you may see a
+different number of digits, but the VS shown on the payment request is always the
+correct one to use.
 
 You should include this number in the VS field every time you make a bank transfer
 to the class fund account — even when a QR code is not available.
