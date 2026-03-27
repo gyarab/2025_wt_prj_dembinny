@@ -1,0 +1,1782 @@
+[
+    {
+        "model": "admin.logentry",
+        "pk": 7,
+        "fields": {
+            "action_time": "2026-03-27T10:32:20.059Z",
+            "user": 3,
+            "content_type": 7,
+            "object_id": "3",
+            "object_repr": "admin (System Admin)",
+            "action_flag": 2,
+            "change_message": "[{\"changed\": {\"fields\": [\"Role\"]}}]"
+        }
+    },
+    {
+        "model": "admin.logentry",
+        "pk": 8,
+        "fields": {
+            "action_time": "2026-03-27T10:36:43.900Z",
+            "user": 3,
+            "content_type": 6,
+            "object_id": "2",
+            "object_repr": "admin (System Admin) → 2.F [manager]",
+            "action_flag": 1,
+            "change_message": "[{\"added\": {}}]"
+        }
+    },
+    {
+        "model": "admin.logentry",
+        "pk": 9,
+        "fields": {
+            "action_time": "2026-03-27T10:50:24.265Z",
+            "user": 3,
+            "content_type": 14,
+            "object_id": "6",
+            "object_repr": "ELIŠKA ANEŽKA (Student) → Peníze pro radost admina (100000.00 CZK, Confirmed)",
+            "action_flag": 2,
+            "change_message": "[{\"changed\": {\"fields\": [\"Paid at\"]}}]"
+        }
+    },
+    {
+        "model": "admin.logentry",
+        "pk": 10,
+        "fields": {
+            "action_time": "2026-03-27T11:01:12.443Z",
+            "user": 3,
+            "content_type": 7,
+            "object_id": "3",
+            "object_repr": "admin (System Admin)",
+            "action_flag": 2,
+            "change_message": "[]"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 1,
+        "fields": {
+            "name": "System Admin",
+            "permissions": []
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 2,
+        "fields": {
+            "name": "Treasurer – Full",
+            "permissions": []
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 3,
+        "fields": {
+            "name": "Treasurer – Accountant",
+            "permissions": []
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 4,
+        "fields": {
+            "name": "Treasurer – Bookkeeper",
+            "permissions": []
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 5,
+        "fields": {
+            "name": "Student",
+            "permissions": []
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 6,
+        "fields": {
+            "name": "Parent",
+            "permissions": []
+        }
+    },
+    {
+        "model": "sessions.session",
+        "pk": "agms9hjxzrya5ned94dd880w6cacy40p",
+        "fields": {
+            "session_data": ".eJxVjDsOwjAQBe_iGll4nTg2JT1nsN5mFxJAtpRPhbg7REoB7ZuZ9zIZ6zLkddYpj2JOxpvD78boH1o2IHeUW7V9Lcs0st0Uu9PZXqro87y7fwcD5uFbE8iBmJPX2EoISC4FSr4h9MSxu8IxexekldSoIDI0QI9oRZx2ZN4f5nQ4gg:1w64Xm:T9HICDSYfeYlGfxAsH0XLXJNMpExYF6rEqXiIxn_dd0",
+            "expire_date": "2026-04-10T10:35:58.855Z"
+        }
+    },
+    {
+        "model": "sessions.session",
+        "pk": "xthvlnm5tw4e0re3irjae5ff990l9xic",
+        "fields": {
+            "session_data": ".eJzVWV1P6zgU_Csozyhq6BfwtKbNpaZpc1VCV7vLVeUkLjV1YhSnRYD473vS8uGc3PRxN32j7sTNjO05c8ybtWCbfLXYaJ4tRGxdWo51ao6FLFrztPgifmTpg7IjleaZCO0CYn98q-2Jirm8-sCWJlgxvYKnu8v-RRx2Wuf9KOwx1uqxyFku21HnjMcRP1t2l2E75K2u0-mdt8Net99pOf0l67f6jLU7XQ6TiuRJZTlM-ZTxreDP1uWbpaOVUnIRSab17v2dU2spJE9ZwuFXc67zheb5wrEjvYU5MvWsrct_3oo_FukmCXlmXZ4Vz2SA_Hjqlkz8IQU0zPo1OPZnPgzxhAkJHzVLVCzstcqUrf_QayWZHb0CoCD98UgJs_txuRvONzFPcxh4Yhn8sfic83uk9Drfw-b7wOiWZYKFki_0SxKqrxm0flZZvP_Es0xlBeNf76dl0m1EenK_abWii2synbqI-ohMiUE94Q8sTbm9Yimr5V4GNY18B6-4_4MSxNr1PLfEW6ulYDaXxe6qX_MSqGm8u3jRSRBQcouYe3f0mpoLzvJcMG3LjXgQ9SteRjWNeg9RH1L32kfEb4k3J4E_cw3yseDgeprJLctVxmvpV3BNE6CPBPAqO35Chq7n0qlJX8JuThiYOxdpPXmE-k-ox_XcMfrk3orvrZNko_OTkJ_EsEFzfaJS-WJbFZ3OkU4Dj9AZtsQPl_xkA_VHwJrvHK9OoxLmqBW6QAq5HoXi4fRaY7yjyNQtvunHY9NIuRR6zUAJ_rqud1KEOmrFnBaSbEoCUj2AYzKk4D93hlYpy1lxutYsFmAsm1q5qsDjVszBJZruq3G5UA1oqUKLourKTSQOFGgTc9wSVXJr4HoViajn_WVKlHMQRQoJU9ZKZGKOWyKccr27cSXuDP0JndLB2Kx6mzUkmVglIhXRur7sIdhxa4VD8Q0Z-FeViBAEI_dPQ6pHFqnQLsLfij_XKoVQxy0UTtFDMqWuh5Xa9VNOsG-rzEDJUsFlocWBMGlijlssnLtHZEKH7qiSvIckMERasUTEfAV5OmZ5rUwIddxC4XwObv6DTJFO8_2ugkw6L5v6kqX2lkHG3B6ydRPVtP7EwcHbD_wJmSEBBp47cae3BnmVq4RldiR5wlNdyx7DGkcfp2oy3FtHpaSPZ_Q2oKWriaL1guiXCZ2LA5cTGNY0Dc5wTJ77N4WBOg4bYMeArUHNkr1VjzmPVuCZmaiv2AjVOAFw6p27s2qXPqNm77nlGdvxqS8nJqRxlHGKHYzIzPODALfcN2RYarlXLJMqhwL5CNu6vutGsMbRxwnV9ygsOi6P7hWBM78rB1--JwWsq615CEABxl7rfBVg40TA0RMaO7ztP1J6KaRH7DN8H4joJqhxxKsXsvvDXT7w18PS_fvuICfsIT5w_W5iGscaZ8KCdaW5_0nuPEwbitYT28jDvL9BjSOOM94NqdCeuINRQL2S1z0W_0RJoG7lQh7wOgxrHH2c8H5_C_bTDWbmwn_ebD3xPKtfeYRqHPdqvCMTRJxAY2Q6PHQ1ic2gw6n3dhPSNMptnOZ-Z27zfbybVQ1uF1oO-9se0jjelRBHPHe6uwiI48p5_9svhTkm4XVe4By_qgN5roz63wX49f7-L9f405o:1w3XEB:3L_OlwwOhJnTBzasBJyxhCNO0yGPTm8oHC0JMlGshd0",
+            "expire_date": "2026-04-03T10:37:15.093Z"
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 3,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$3hMhEQK66Su9nqv9bQT3bF$cKtjZ8kayQ5tFaqm8W3b+APjAcHsQGnwbQvZPJ7/5sA=",
+            "last_login": "2026-03-27T10:31:48Z",
+            "is_superuser": true,
+            "username": "admin",
+            "first_name": "",
+            "last_name": "",
+            "email": "",
+            "is_staff": true,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:22:57Z",
+            "role": "system_admin",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 4,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$RXZlOnfZcBP08DhVZwfwRk$V8ddDJ8h+X/zVs0yNvhPBU0pPCVMheDKyTyAeEOHSV4=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "samodi.koro.s",
+            "first_name": "SAMODI",
+            "last_name": "KORO",
+            "email": "samodi.koro.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:35.402Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 5,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$c9eqfUzgWBeHcYehsomWPF$7/eRxxlQJo0cUkByxYiNKz64dImzgPUjFlyQ88eMMHE=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "meganne.hana.s",
+            "first_name": "MÉGANNE",
+            "last_name": "HANA",
+            "email": "meganne.hana.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:36.189Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 6,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$Ryqh1Geo8aWEnWlRdw1KJw$2Nea1EjQFKV0E3keTI5mylcXJPYCbYF5MlrwzTnPe2o=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "sofia.ellena.s",
+            "first_name": "SOFIA",
+            "last_name": "ELLENA",
+            "email": "sofia.ellena.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:36.975Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 7,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$Z6fKZWqrkkwaHJOiwUb693$8zxcMROuVJxCKbn3OPGgIWGaVuCYgkPf6jkMFhT3ZjI=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "mattias.luigi.s",
+            "first_name": "MATTIAS",
+            "last_name": "LUIGI",
+            "email": "mattias.luigi.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:37.759Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 8,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$ejD6oDsztPf0lZaRjoB4ng$YPvcY3SV48ySbZtAKJSIe1zA5RBTdfJbP38EG0r/bJA=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "diego.salvatore.s",
+            "first_name": "DIEGO",
+            "last_name": "SALVATORE",
+            "email": "diego.salvatore.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:38.542Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 9,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$cJ97kfZer1iFUWK4aa5pGT$gELJiG81K4j1TB9gpcQY2sOk+61uqXT8N6mdQLRPOHk=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "lia.madeleine.s",
+            "first_name": "LIA",
+            "last_name": "MADELEINE",
+            "email": "lia.madeleine.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:39.321Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 10,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$HjojKc6wxSEEaLo5htwV3B$au7RREtG/Ax2v/o8JGDEJUBZbwEn9rGcLger7J5ToIo=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "claire.anne.s",
+            "first_name": "CLAIRE",
+            "last_name": "ANNE",
+            "email": "claire.anne.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:40.100Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 11,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$2CNaoeAZeXSlc9S5XR7pnd$GeKgEHt3S+AHao8drT+iyPoyHpUJNmFr6TMkwysZcOs=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "eliska.anezka.s",
+            "first_name": "ELIŠKA",
+            "last_name": "ANEŽKA",
+            "email": "eliska.anezka.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:40.882Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 12,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$kVFJFeWLBkmlDpty3Kv4Gb$sJFHBIuiJaBJayBuQNzG73QAgCBrgQw7V1nKUqNlMdM=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "natalia.kadiatou.s",
+            "first_name": "NATALIA",
+            "last_name": "KADIATOU",
+            "email": "natalia.kadiatou.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:41.661Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 13,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$MRFTsCPF9uyBAB7W9GgCzN$mVALUi+vVpKGT+Sd+vVo/bQrHM8Avl8tIdiqjkzQN44=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "siena.lucia.s",
+            "first_name": "SIENA",
+            "last_name": "LUCIA",
+            "email": "siena.lucia.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:42.441Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 14,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$CLd3a1Yyii0XNpaqzSioM2$9HfeQwWSvEnIWnmOnpn3kSjB1EEBacs8FDCe6sBMGGg=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "stela.lilly.s",
+            "first_name": "STELA",
+            "last_name": "LILLY",
+            "email": "stela.lilly.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:43.222Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 15,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$ctmJe7A3ZXyETE7k4JL0wk$/vSlWB+fl8Haa6Pnl8jkBE+8uad9nuZzeSg1o6otQGE=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "lukas.dominick.s",
+            "first_name": "LUKAS",
+            "last_name": "DOMINICK",
+            "email": "lukas.dominick.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:44.001Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 16,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$FuvkR44pmNDRNE5DQtPqEb$LX+ZWqOeDpQXW9gB26ESjPlo2Njlktf/1NuPSZuvIyo=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "jacob.matthew.s",
+            "first_name": "JACOB",
+            "last_name": "MATTHEW",
+            "email": "jacob.matthew.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:44.784Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 17,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$ebsSQXkGkQvhPJrfBcYofA$38vMIQAd1yvW8HhuS0/rh/FaJpl4cXy9616WSG1FvoU=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "daniel.mate.s",
+            "first_name": "DANIEL",
+            "last_name": "MÁTÉ",
+            "email": "daniel.mate.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:45.562Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 18,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$YYg2y7FknZt0lqQfPvUDkl$l3d6JNOHY47VEehCj/Ze5aJ64Nyq99mNj8u7MGSLTVg=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "hamideh.sadat.s",
+            "first_name": "HAMIDEH",
+            "last_name": "SADAT",
+            "email": "hamideh.sadat.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:46.342Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 19,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$4hgHpbsbic9TbGnnBN5v7b$mG0Dj06j1ZVLpbXDUmgWAWsmBmPOJX2m1MIYumRln30=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "stefan.vaclav.s",
+            "first_name": "STEFAN",
+            "last_name": "VÁCLAV",
+            "email": "stefan.vaclav.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:47.119Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 20,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$siDgWvUfbnrKv3V3FPuHsO$NT2frLrr3Z7m76JepzOc7QSJM3UUq5UPI5ly7R6gces=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "otomar.clemens.s",
+            "first_name": "OTOMAR",
+            "last_name": "CLEMENS",
+            "email": "otomar.clemens.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:47.897Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 21,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$WUYnix8Y0Bdpqw4VpzULan$gDzZpm8HKIXlIZgP7WVfb0biGVWPYBjkgRvDn1JnMRo=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "adela.kristina.s",
+            "first_name": "ADÉLA",
+            "last_name": "KRISTINA",
+            "email": "adela.kristina.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:48.677Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 22,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$XjPdEwHFhOsIgKs7meDx07$0IeZ7q0UElyoaHCNRtGPvkJ36amZiZCkx18n3xQiGAw=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "vojtech.marik.s",
+            "first_name": "VOJTĚCH",
+            "last_name": "MARIK",
+            "email": "vojtech.marik.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:49.458Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 23,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$nFMvG1Fny7ElCIIDafjD4h$g7nSkMW+0iSBkR3p7Q1BxIc8lvyYs8Xp9Jj9C0K1QgI=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "vera.marie.s",
+            "first_name": "VERA",
+            "last_name": "MARIE",
+            "email": "vera.marie.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:50.236Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 24,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$AWRtf3K3B40r4V2ep9rljq$vkVHRFe9X+GIfsZlHMqMcWswFl3pU6xgH+nf7b823EY=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "charlotte.jade.s",
+            "first_name": "CHARLOTTE",
+            "last_name": "JADE",
+            "email": "charlotte.jade.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:51.018Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 25,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$AHYQBfZRcybYZfJkFMPdSg$Omxl5QAtGnq/YtfIAehJ+Iq0QeTS3Qoh1GxbIpOEM3A=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "oliver.sebastian.s",
+            "first_name": "OLIVER",
+            "last_name": "SEBASTIAN",
+            "email": "oliver.sebastian.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:51.797Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 26,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$XXKgUpQ1f6MPF4K8ETfx1C$KIDxgDVeFZgSfxB7k+MuzdBRHvhiCHFNo0GT5+8ATmQ=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "luca.dominic.s",
+            "first_name": "LUCA",
+            "last_name": "DOMINIC",
+            "email": "luca.dominic.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:52.602Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 27,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$wTyNlLMzm02lnb8mz47ed8$++jTYQ/SE8Kq9gzCS3NZdIrv2rWd7EIP9b9/VqF/CzE=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "marie.magda.s",
+            "first_name": "MARIE",
+            "last_name": "MAGDA",
+            "email": "marie.magda.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:53.383Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 28,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$mIXH5Fc8hKgnOc2aKFJTMu$cRVE2fz2ZohA+Lfr2NPSQg6l+HwfG20vhhpEAhX51Ic=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "marina.paula.s",
+            "first_name": "MARINA",
+            "last_name": "PAULA",
+            "email": "marina.paula.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:54.168Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 29,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$xpaBRQcWBJnsMUX1gIqqqw$yOSiewAAjLOLxaj6L9pV3/4fkRBUvbPMaECu+UPgwBM=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "jana.mechtilde.s",
+            "first_name": "JANA",
+            "last_name": "MECHTILDE",
+            "email": "jana.mechtilde.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:54.948Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 30,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$KCyL3c6SZroCBWRsmNrCOe$iAMK7re7SZhV1dlX1ZI85iKwwVC/qRV8+1gDR1+zSLM=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "natalia.petra.s",
+            "first_name": "NATALIA",
+            "last_name": "PETRA",
+            "email": "natalia.petra.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:55.726Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 31,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$e4A1AuDmXiEadGrx1o8il0$pWrK3D4BKlMz0lX6MyiP0clftmoZgKQue0yzO9DQK48=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "adam.aiden.s",
+            "first_name": "ADAM",
+            "last_name": "AIDEN",
+            "email": "adam.aiden.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:56.504Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 32,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$bMQollyec5HIbBlmvxTy4N$w8Me+kUdFleHlsL6wOZwkzkNAE3vjSqTjLhQctO+1ZY=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "marie.vera.s",
+            "first_name": "MARIE",
+            "last_name": "VĚRA",
+            "email": "marie.vera.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:57.284Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.customuser",
+        "pk": 33,
+        "fields": {
+            "password": "pbkdf2_sha256$1200000$ZuviU4nkQEniQp7tHlI0jO$0QmJ6Czji+k5nbJGiy0Rn05ehgCWnBTDXg3zhv7GB7U=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "valentyna.zoe.s",
+            "first_name": "VALENTÝNA",
+            "last_name": "ZOE",
+            "email": "valentyna.zoe.s@skola.cz",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2026-03-27T10:35:58.067Z",
+            "role": "student",
+            "hide_fund_balance": false,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "accounts.schoolclass",
+        "pk": 1,
+        "fields": {
+            "name": "2.F",
+            "teacher": null,
+            "school_year": "2025/26",
+            "vs_prefix": "01",
+            "created_at": "2026-03-20T10:15:13.020Z"
+        }
+    },
+    {
+        "model": "accounts.fundgroup",
+        "pk": 1,
+        "fields": {
+            "school_class": 1,
+            "name": "manager",
+            "can_log_expenses": true,
+            "can_manage_payment_requests": true,
+            "can_view_bank_account": true,
+            "can_manage_students": true,
+            "created_at": "2026-03-20T10:15:41.881Z"
+        }
+    },
+    {
+        "model": "accounts.classmembership",
+        "pk": 2,
+        "fields": {
+            "school_class": 1,
+            "user": 3,
+            "fund_group": 1,
+            "joined_at": "2026-03-27T10:36:43.899Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 1,
+        "fields": {
+            "user": 4,
+            "school_class": 1,
+            "variable_symbol": "01001",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:36.188Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 2,
+        "fields": {
+            "user": 5,
+            "school_class": 1,
+            "variable_symbol": "01002",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:36.974Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 3,
+        "fields": {
+            "user": 6,
+            "school_class": 1,
+            "variable_symbol": "01003",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:37.758Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 4,
+        "fields": {
+            "user": 7,
+            "school_class": 1,
+            "variable_symbol": "01004",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:38.541Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 5,
+        "fields": {
+            "user": 8,
+            "school_class": 1,
+            "variable_symbol": "01005",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:39.320Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 6,
+        "fields": {
+            "user": 9,
+            "school_class": 1,
+            "variable_symbol": "01006",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:40.099Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 7,
+        "fields": {
+            "user": 10,
+            "school_class": 1,
+            "variable_symbol": "01007",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:40.881Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 8,
+        "fields": {
+            "user": 11,
+            "school_class": 1,
+            "variable_symbol": "01008",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:41.660Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 9,
+        "fields": {
+            "user": 12,
+            "school_class": 1,
+            "variable_symbol": "01009",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:42.440Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 10,
+        "fields": {
+            "user": 13,
+            "school_class": 1,
+            "variable_symbol": "01010",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:43.221Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 11,
+        "fields": {
+            "user": 14,
+            "school_class": 1,
+            "variable_symbol": "01011",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:44.000Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 12,
+        "fields": {
+            "user": 15,
+            "school_class": 1,
+            "variable_symbol": "01012",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:44.783Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 13,
+        "fields": {
+            "user": 16,
+            "school_class": 1,
+            "variable_symbol": "01013",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:45.561Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 14,
+        "fields": {
+            "user": 17,
+            "school_class": 1,
+            "variable_symbol": "01014",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:46.341Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 15,
+        "fields": {
+            "user": 18,
+            "school_class": 1,
+            "variable_symbol": "01015",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:47.118Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 16,
+        "fields": {
+            "user": 19,
+            "school_class": 1,
+            "variable_symbol": "01016",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:47.896Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 17,
+        "fields": {
+            "user": 20,
+            "school_class": 1,
+            "variable_symbol": "01017",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:48.676Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 18,
+        "fields": {
+            "user": 21,
+            "school_class": 1,
+            "variable_symbol": "01018",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:49.457Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 19,
+        "fields": {
+            "user": 22,
+            "school_class": 1,
+            "variable_symbol": "01019",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:50.235Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 20,
+        "fields": {
+            "user": 23,
+            "school_class": 1,
+            "variable_symbol": "01020",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:51.017Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 21,
+        "fields": {
+            "user": 24,
+            "school_class": 1,
+            "variable_symbol": "01021",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:51.796Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 22,
+        "fields": {
+            "user": 25,
+            "school_class": 1,
+            "variable_symbol": "01022",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:52.601Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 23,
+        "fields": {
+            "user": 26,
+            "school_class": 1,
+            "variable_symbol": "01023",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:53.382Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 24,
+        "fields": {
+            "user": 27,
+            "school_class": 1,
+            "variable_symbol": "01024",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:54.167Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 25,
+        "fields": {
+            "user": 28,
+            "school_class": 1,
+            "variable_symbol": "01025",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:54.947Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 26,
+        "fields": {
+            "user": 29,
+            "school_class": 1,
+            "variable_symbol": "01026",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:55.725Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 27,
+        "fields": {
+            "user": 30,
+            "school_class": 1,
+            "variable_symbol": "01027",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:56.503Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 28,
+        "fields": {
+            "user": 31,
+            "school_class": 1,
+            "variable_symbol": "01028",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:57.284Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 29,
+        "fields": {
+            "user": 32,
+            "school_class": 1,
+            "variable_symbol": "01029",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:58.066Z"
+        }
+    },
+    {
+        "model": "accounts.studentprofile",
+        "pk": 30,
+        "fields": {
+            "user": 33,
+            "school_class": 1,
+            "variable_symbol": "01030",
+            "parent": null,
+            "is_active": true,
+            "created_at": "2026-03-27T10:35:58.843Z"
+        }
+    },
+    {
+        "model": "finances.bankaccount",
+        "pk": 1,
+        "fields": {
+            "school_class": 1,
+            "owner_name": "Class 2.F Fund",
+            "account_number": "123456789/0800",
+            "iban": "CZ12300000000123123213",
+            "bic": "",
+            "bank_name": "BaBa Banka",
+            "note": "",
+            "is_active": true,
+            "updated_at": "2026-03-27T10:38:36.776Z"
+        }
+    },
+    {
+        "model": "finances.paymentrequest",
+        "pk": 1,
+        "fields": {
+            "title": "ewAR",
+            "description": "",
+            "amount": "10.00",
+            "due_date": null,
+            "school_class": 1,
+            "created_by": null,
+            "created_at": "2026-03-20T10:16:24.495Z",
+            "variable_symbol": "",
+            "specific_symbol": "",
+            "assign_to_all": true,
+            "assigned_to": []
+        }
+    },
+    {
+        "model": "finances.paymentrequest",
+        "pk": 2,
+        "fields": {
+            "title": "Peníze pro radost admina",
+            "description": "",
+            "amount": "100000.00",
+            "due_date": null,
+            "school_class": 1,
+            "created_by": 3,
+            "created_at": "2026-03-27T10:49:06.680Z",
+            "variable_symbol": "",
+            "specific_symbol": "",
+            "assign_to_all": true,
+            "assigned_to": []
+        }
+    },
+    {
+        "model": "finances.transaction",
+        "pk": 1,
+        "fields": {
+            "payment_request": 1,
+            "school_class": 1,
+            "student": 31,
+            "amount": "10.00",
+            "status": "cancel",
+            "note": "",
+            "paid_at": "2026-03-26T23:00:00Z",
+            "confirmed_at": null,
+            "created_at": "2026-03-27T10:37:14.989Z"
+        }
+    },
+    {
+        "model": "finances.transaction",
+        "pk": 2,
+        "fields": {
+            "payment_request": 1,
+            "school_class": 1,
+            "student": 31,
+            "amount": "10.00",
+            "status": "rejected",
+            "note": "",
+            "paid_at": "2026-03-26T23:00:00Z",
+            "confirmed_at": null,
+            "created_at": "2026-03-27T10:37:34.749Z"
+        }
+    },
+    {
+        "model": "finances.transaction",
+        "pk": 3,
+        "fields": {
+            "payment_request": 1,
+            "school_class": 1,
+            "student": 31,
+            "amount": "10.00",
+            "status": "confirmed",
+            "note": "",
+            "paid_at": "2026-03-26T23:00:00Z",
+            "confirmed_at": "2026-03-27T10:39:49.001Z",
+            "created_at": "2026-03-27T10:39:49.002Z"
+        }
+    },
+    {
+        "model": "finances.transaction",
+        "pk": 4,
+        "fields": {
+            "payment_request": 1,
+            "school_class": 1,
+            "student": 11,
+            "amount": "10.00",
+            "status": "confirmed",
+            "note": "",
+            "paid_at": "2026-03-26T23:00:00Z",
+            "confirmed_at": "2026-03-27T10:40:02.138Z",
+            "created_at": "2026-03-27T10:40:02.139Z"
+        }
+    },
+    {
+        "model": "finances.transaction",
+        "pk": 5,
+        "fields": {
+            "payment_request": 1,
+            "school_class": 1,
+            "student": 10,
+            "amount": "10.00",
+            "status": "confirmed",
+            "note": "",
+            "paid_at": "2026-03-26T23:00:00Z",
+            "confirmed_at": "2026-03-27T10:48:20.902Z",
+            "created_at": "2026-03-27T10:48:20.902Z"
+        }
+    },
+    {
+        "model": "finances.transaction",
+        "pk": 6,
+        "fields": {
+            "payment_request": 2,
+            "school_class": 1,
+            "student": 11,
+            "amount": "100000.00",
+            "status": "confirmed",
+            "note": "",
+            "paid_at": "2026-03-27T10:50:22Z",
+            "confirmed_at": "2026-03-27T10:49:46Z",
+            "created_at": "2026-03-27T10:49:46.474Z"
+        }
+    },
+    {
+        "model": "finances.expense",
+        "pk": 1,
+        "fields": {
+            "title": "Pizza for admin",
+            "description": "",
+            "amount": "123.00",
+            "category": "food",
+            "school_class": 1,
+            "spent_at": "2026-03-27",
+            "recorded_by": 3,
+            "is_published": true,
+            "created_at": "2026-03-27T10:39:29.719Z"
+        }
+    },
+    {
+        "model": "importer.importbatch",
+        "pk": 1,
+        "fields": {
+            "uploaded_by": 3,
+            "school_class": 1,
+            "original_filename": "test_set_1.csv",
+            "status": "completed",
+            "total_rows": 30,
+            "imported": 30,
+            "skipped": 0,
+            "errors": 0,
+            "created_at": "2026-03-27T10:35:35.400Z",
+            "completed_at": "2026-03-27T10:35:58.844Z"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 1,
+        "fields": {
+            "batch": 1,
+            "row_number": 2,
+            "first_name": "SAMODI",
+            "last_name": "KORO",
+            "username": "samodi.koro.s",
+            "variable_symbol": "01001",
+            "parent_email": "",
+            "plain_password": "0DFeOFM2tEjt",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 2,
+        "fields": {
+            "batch": 1,
+            "row_number": 3,
+            "first_name": "MÉGANNE",
+            "last_name": "HANA",
+            "username": "meganne.hana.s",
+            "variable_symbol": "01002",
+            "parent_email": "",
+            "plain_password": "zpW3sIFrWTTT",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 3,
+        "fields": {
+            "batch": 1,
+            "row_number": 4,
+            "first_name": "SOFIA",
+            "last_name": "ELLENA",
+            "username": "sofia.ellena.s",
+            "variable_symbol": "01003",
+            "parent_email": "",
+            "plain_password": "0Ziyogd3K2A8",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 4,
+        "fields": {
+            "batch": 1,
+            "row_number": 5,
+            "first_name": "MATTIAS",
+            "last_name": "LUIGI",
+            "username": "mattias.luigi.s",
+            "variable_symbol": "01004",
+            "parent_email": "",
+            "plain_password": "Z0CpZLarHJcE",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 5,
+        "fields": {
+            "batch": 1,
+            "row_number": 6,
+            "first_name": "DIEGO",
+            "last_name": "SALVATORE",
+            "username": "diego.salvatore.s",
+            "variable_symbol": "01005",
+            "parent_email": "",
+            "plain_password": "DmFw12M3nyBY",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 6,
+        "fields": {
+            "batch": 1,
+            "row_number": 7,
+            "first_name": "LIA",
+            "last_name": "MADELEINE",
+            "username": "lia.madeleine.s",
+            "variable_symbol": "01006",
+            "parent_email": "",
+            "plain_password": "tpbHhPMAZcXM",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 7,
+        "fields": {
+            "batch": 1,
+            "row_number": 8,
+            "first_name": "CLAIRE",
+            "last_name": "ANNE",
+            "username": "claire.anne.s",
+            "variable_symbol": "01007",
+            "parent_email": "",
+            "plain_password": "ZJWSK9GoLdSt",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 8,
+        "fields": {
+            "batch": 1,
+            "row_number": 9,
+            "first_name": "ELIŠKA",
+            "last_name": "ANEŽKA",
+            "username": "eliska.anezka.s",
+            "variable_symbol": "01008",
+            "parent_email": "",
+            "plain_password": "hrae9EgZhUAu",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 9,
+        "fields": {
+            "batch": 1,
+            "row_number": 10,
+            "first_name": "NATALIA",
+            "last_name": "KADIATOU",
+            "username": "natalia.kadiatou.s",
+            "variable_symbol": "01009",
+            "parent_email": "",
+            "plain_password": "Hs4VRCrBxGdf",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 10,
+        "fields": {
+            "batch": 1,
+            "row_number": 11,
+            "first_name": "SIENA",
+            "last_name": "LUCIA",
+            "username": "siena.lucia.s",
+            "variable_symbol": "01010",
+            "parent_email": "",
+            "plain_password": "RuxNzKFzAAH1",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 11,
+        "fields": {
+            "batch": 1,
+            "row_number": 12,
+            "first_name": "STELA",
+            "last_name": "LILLY",
+            "username": "stela.lilly.s",
+            "variable_symbol": "01011",
+            "parent_email": "",
+            "plain_password": "p19l11FgGlTW",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 12,
+        "fields": {
+            "batch": 1,
+            "row_number": 13,
+            "first_name": "LUKAS",
+            "last_name": "DOMINICK",
+            "username": "lukas.dominick.s",
+            "variable_symbol": "01012",
+            "parent_email": "",
+            "plain_password": "GS98JujKKbyE",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 13,
+        "fields": {
+            "batch": 1,
+            "row_number": 14,
+            "first_name": "JACOB",
+            "last_name": "MATTHEW",
+            "username": "jacob.matthew.s",
+            "variable_symbol": "01013",
+            "parent_email": "",
+            "plain_password": "anO6feLWLtoM",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 14,
+        "fields": {
+            "batch": 1,
+            "row_number": 15,
+            "first_name": "DANIEL",
+            "last_name": "MÁTÉ",
+            "username": "daniel.mate.s",
+            "variable_symbol": "01014",
+            "parent_email": "",
+            "plain_password": "3XawD91JqWXY",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 15,
+        "fields": {
+            "batch": 1,
+            "row_number": 16,
+            "first_name": "HAMIDEH",
+            "last_name": "SADAT",
+            "username": "hamideh.sadat.s",
+            "variable_symbol": "01015",
+            "parent_email": "",
+            "plain_password": "rDbXONucDR5r",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 16,
+        "fields": {
+            "batch": 1,
+            "row_number": 17,
+            "first_name": "STEFAN",
+            "last_name": "VÁCLAV",
+            "username": "stefan.vaclav.s",
+            "variable_symbol": "01016",
+            "parent_email": "",
+            "plain_password": "4VokpCdOo4Sk",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 17,
+        "fields": {
+            "batch": 1,
+            "row_number": 18,
+            "first_name": "OTOMAR",
+            "last_name": "CLEMENS",
+            "username": "otomar.clemens.s",
+            "variable_symbol": "01017",
+            "parent_email": "",
+            "plain_password": "VBp1jmCm3luu",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 18,
+        "fields": {
+            "batch": 1,
+            "row_number": 19,
+            "first_name": "ADÉLA",
+            "last_name": "KRISTINA",
+            "username": "adela.kristina.s",
+            "variable_symbol": "01018",
+            "parent_email": "",
+            "plain_password": "ng2TUzqiQeoq",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 19,
+        "fields": {
+            "batch": 1,
+            "row_number": 20,
+            "first_name": "VOJTĚCH",
+            "last_name": "MARIK",
+            "username": "vojtech.marik.s",
+            "variable_symbol": "01019",
+            "parent_email": "",
+            "plain_password": "aSwlR3hi7ZPx",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 20,
+        "fields": {
+            "batch": 1,
+            "row_number": 21,
+            "first_name": "VERA",
+            "last_name": "MARIE",
+            "username": "vera.marie.s",
+            "variable_symbol": "01020",
+            "parent_email": "",
+            "plain_password": "f7HM8vSUUHbF",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 21,
+        "fields": {
+            "batch": 1,
+            "row_number": 22,
+            "first_name": "CHARLOTTE",
+            "last_name": "JADE",
+            "username": "charlotte.jade.s",
+            "variable_symbol": "01021",
+            "parent_email": "",
+            "plain_password": "nxhj00sbS7KO",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 22,
+        "fields": {
+            "batch": 1,
+            "row_number": 23,
+            "first_name": "OLIVER",
+            "last_name": "SEBASTIAN",
+            "username": "oliver.sebastian.s",
+            "variable_symbol": "01022",
+            "parent_email": "",
+            "plain_password": "caIf7aRE0O5P",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 23,
+        "fields": {
+            "batch": 1,
+            "row_number": 24,
+            "first_name": "LUCA",
+            "last_name": "DOMINIC",
+            "username": "luca.dominic.s",
+            "variable_symbol": "01023",
+            "parent_email": "",
+            "plain_password": "Yc2hFzw7iuo4",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 24,
+        "fields": {
+            "batch": 1,
+            "row_number": 25,
+            "first_name": "MARIE",
+            "last_name": "MAGDA",
+            "username": "marie.magda.s",
+            "variable_symbol": "01024",
+            "parent_email": "",
+            "plain_password": "8feG3qc4vcGa",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 25,
+        "fields": {
+            "batch": 1,
+            "row_number": 26,
+            "first_name": "MARINA",
+            "last_name": "PAULA",
+            "username": "marina.paula.s",
+            "variable_symbol": "01025",
+            "parent_email": "",
+            "plain_password": "ub9i93mzkgks",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 26,
+        "fields": {
+            "batch": 1,
+            "row_number": 27,
+            "first_name": "JANA",
+            "last_name": "MECHTILDE",
+            "username": "jana.mechtilde.s",
+            "variable_symbol": "01026",
+            "parent_email": "",
+            "plain_password": "gWDOZTHK7vtG",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 27,
+        "fields": {
+            "batch": 1,
+            "row_number": 28,
+            "first_name": "NATALIA",
+            "last_name": "PETRA",
+            "username": "natalia.petra.s",
+            "variable_symbol": "01027",
+            "parent_email": "",
+            "plain_password": "QSZIdKY2ec0N",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 28,
+        "fields": {
+            "batch": 1,
+            "row_number": 29,
+            "first_name": "ADAM",
+            "last_name": "AIDEN",
+            "username": "adam.aiden.s",
+            "variable_symbol": "01028",
+            "parent_email": "",
+            "plain_password": "gbWSgPueJe4v",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 29,
+        "fields": {
+            "batch": 1,
+            "row_number": 30,
+            "first_name": "MARIE",
+            "last_name": "VĚRA",
+            "username": "marie.vera.s",
+            "variable_symbol": "01029",
+            "parent_email": "",
+            "plain_password": "HbpF05vNbTrz",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    },
+    {
+        "model": "importer.importrow",
+        "pk": 30,
+        "fields": {
+            "batch": 1,
+            "row_number": 31,
+            "first_name": "VALENTÝNA",
+            "last_name": "ZOE",
+            "username": "valentyna.zoe.s",
+            "variable_symbol": "01030",
+            "parent_email": "",
+            "plain_password": "8LSKRhGyr2KU",
+            "outcome": "imported",
+            "message": "new user"
+        }
+    }
+]
