@@ -196,6 +196,11 @@ class CustomUser(AbstractUser):
     def is_parent(self) -> bool:
         """True for Parent role users."""
         return self.role == self.Role.PARENT
+    
+    @property
+    def has_sign_in(self) -> bool:
+        """True if user has already signed in."""
+        return bool(self.last_login)
 
     @property
     def can_manage_payment_requests(self) -> bool:
